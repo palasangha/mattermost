@@ -47,7 +47,7 @@ func NewSqlPostStore(sqlStore SqlStore, metrics einterfaces.MetricsInterface) st
 	}
 
 	for _, db := range sqlStore.GetAllConns() {
-		table := db.AddTableWithName(model.Post{}, "Posts").SetKeys(false, "Id")
+		table := db.AddTableWithName(model.Post{}, "Posts").SetKeys(true, "AutoId")
 		table.ColMap("Id").SetMaxSize(26)
 		table.ColMap("UserId").SetMaxSize(26)
 		table.ColMap("ChannelId").SetMaxSize(26)

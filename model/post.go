@@ -41,6 +41,7 @@ const (
 )
 
 type Post struct {
+	AutoId        int64           `json:"auto_id"`
 	Id            string          `json:"id"`
 	CreateAt      int64           `json:"create_at"`
 	UpdateAt      int64           `json:"update_at"`
