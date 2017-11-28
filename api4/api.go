@@ -102,6 +102,8 @@ type Routes struct {
 	ReactionByNameForPostForUser *mux.Router // 'api/v4/users/{user_id:[A-Za-z0-9]+}/posts/{post_id:[A-Za-z0-9]+}/reactions/{emoji_name:[A-Za-z0-9_-+]+}'
 
 	Webrtc *mux.Router // 'api/v4/webrtc'
+
+	Benchmark *mux.Router // 'api/v4/benchmark'
 }
 
 type API struct {
@@ -192,6 +194,8 @@ func Init(a *app.App, root *mux.Router, full bool) *API {
 
 	api.BaseRoutes.OpenGraph = api.BaseRoutes.ApiRoot.PathPrefix("/opengraph").Subrouter()
 
+	api.BaseRoutes.Benchmark = api.BaseRoutes.ApiRoot.PathPrefix("/benchmark").Subrouter()
+
 	api.InitUser()
 	api.InitTeam()
 	api.InitChannel()
@@ -217,6 +221,7 @@ func Init(a *app.App, root *mux.Router, full bool) *API {
 	api.InitWebrtc()
 	api.InitOpenGraph()
 	api.InitPlugin()
+	api.InitBenchmark()
 
 	root.Handle("/api/v4/{anything:.*}", http.HandlerFunc(Handle404))
 
