@@ -169,7 +169,7 @@ func (s SqlPostStore) GetFlaggedPosts(userId string, offset int, limit int) stor
 		pl := model.NewPostList()
 
 		var posts []*model.Post
-		if _, err := s.GetReplica().Select(&posts, "SELECT * FROM Posts WHERE Id IN (SELECT Name FROM Preferences WHERE UserId = :UserId AND Category = :Category) AND DeleteAt = 0 ORDER BY CreateAt DESC LIMIT :Limit OFFSET :Offset", map[string]interface{}{"UserId": userId, "Category": model.PREFERENCE_CATEGORY_FLAGGED_POST, "Offset": offset, "Limit": limit}); err != nil {
+		if _, err := s.GetReplica().Select(&posts, "SELECT * FROM Posts WHERE Id IN (SELECT Name FROM Preferences WHERE UserId = :UserId AND Category = :Category) AND DeleteAt = 0 ORDER BY AutoId DESC LIMIT :Limit OFFSET :Offset", map[string]interface{}{"UserId": userId, "Category": model.PREFERENCE_CATEGORY_FLAGGED_POST, "Offset": offset, "Limit": limit}); err != nil {
 			result.Err = model.NewAppError("SqlPostStore.GetFlaggedPosts", "store.sql_post.get_flagged_posts.app_error", nil, err.Error(), http.StatusInternalServerError)
 		} else {
 			for _, post := range posts {
@@ -211,7 +211,7 @@ func (s SqlPostStore) GetFlaggedPostsForTeam(userId, teamId string, offset int, 
             INNER JOIN Channels as B
                 ON B.Id = A.ChannelId
             WHERE B.TeamId = :TeamId OR B.TeamId = ''
-            ORDER BY CreateAt DESC
+            ORDER BY AutoId DESC
             LIMIT :Limit OFFSET :Offset`
 
 		if _, err := s.GetReplica().Select(&posts, query, map[string]interface{}{"UserId": userId, "Category": model.PREFERENCE_CATEGORY_FLAGGED_POST, "Offset": offset, "Limit": limit, "TeamId": teamId}); err != nil {
@@ -240,7 +240,7 @@ func (s SqlPostStore) GetFlaggedPostsForChannel(userId, channelId string, offset
 				Id IN (SELECT Name FROM Preferences WHERE UserId = :UserId AND Category = :Category) 
 				AND ChannelId = :ChannelId
 				AND DeleteAt = 0 
-			ORDER BY CreateAt DESC 
+			ORDER BY AutoId DESC 
 			LIMIT :Limit OFFSET :Offset`
 
 		if _, err := s.GetReplica().Select(&posts, query, map[string]interface{}{"UserId": userId, "Category": model.PREFERENCE_CATEGORY_FLAGGED_POST, "ChannelId": channelId, "Offset": offset, "Limit": limit}); err != nil {
@@ -314,8 +314,7 @@ func (s SqlPostStore) GetSingle(id string) store.StoreChannel {
 }
 
 type etagPosts struct {
-	Id       string
-	UpdateAt int64
+	LastPostAt int64
 }
 
 func (s SqlPostStore) InvalidateLastPostTimeCache(channelId string) {
@@ -344,14 +343,14 @@ func (s SqlPostStore) GetEtag(channelId string, allowFromCache bool) store.Store
 		}
 
 		var et etagPosts
-		err := s.GetReplica().SelectOne(&et, "SELECT Id, UpdateAt FROM Posts WHERE ChannelId = :ChannelId ORDER BY UpdateAt DESC LIMIT 1", map[string]interface{}{"ChannelId": channelId})
+		err := s.GetReplica().SelectOne(&et, "SELECT LastPostAt FROM Channels WHERE ChannelId = :ChannelId", map[string]interface{}{"ChannelId": channelId})
 		if err != nil {
 			result.Data = fmt.Sprintf("%v.%v", model.CurrentVersion, model.GetMillis())
 		} else {
-			result.Data = fmt.Sprintf("%v.%v", model.CurrentVersion, et.UpdateAt)
+			result.Data = fmt.Sprintf("%v.%v", model.CurrentVersion, et.LastPostAt)
 		}
 
-		lastPostTimeCache.AddWithExpiresInSecs(channelId, et.UpdateAt, LAST_POST_TIME_CACHE_SEC)
+		lastPostTimeCache.AddWithExpiresInSecs(channelId, et.LastPostAt, LAST_POST_TIME_CACHE_SEC)
 	})
 }
 
@@ -538,7 +537,7 @@ func (s SqlPostStore) GetPostsSince(channelId string, time int64, allowFromCache
 			        UpdateAt > :Time
 			            AND ChannelId = :ChannelId
 			    LIMIT 1000) temp_tab))
-			ORDER BY CreateAt DESC`,
+			ORDER BY AutoId DESC`,
 			map[string]interface{}{"ChannelId": channelId, "Time": time})
 
 		if err != nil {
@@ -597,7 +596,7 @@ func (s SqlPostStore) getPostsAround(channelId string, postId string, numPosts i
 				(CreateAt `+direction+` (SELECT CreateAt FROM Posts WHERE Id = :PostId)
 			        AND ChannelId = :ChannelId
 					AND DeleteAt = 0)
-			ORDER BY CreateAt `+sort+`
+			ORDER BY AutoId `+sort+`
 			LIMIT :NumPosts
 			OFFSET :Offset)`,
 			map[string]interface{}{"ChannelId": channelId, "PostId": postId, "NumPosts": numPosts, "Offset": offset})
@@ -617,11 +616,11 @@ func (s SqlPostStore) getPostsAround(channelId string, postId string, numPosts i
 					(CreateAt `+direction+` (SELECT CreateAt FROM Posts WHERE Id = :PostId)
 						AND ChannelId = :ChannelId
 						AND DeleteAt = 0)
-					ORDER BY CreateAt `+sort+`
+					ORDER BY AutoId `+sort+`
 					LIMIT :NumPosts
 					OFFSET :Offset)
 			    temp_tab))
-			ORDER BY CreateAt DESC`,
+			ORDER BY AutoId DESC`,
 			map[string]interface{}{"ChannelId": channelId, "PostId": postId, "NumPosts": numPosts, "Offset": offset})
 
 		if err1 != nil {
@@ -658,7 +657,7 @@ func (s SqlPostStore) getPostsAround(channelId string, postId string, numPosts i
 func (s SqlPostStore) getRootPosts(channelId string, offset int, limit int) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		var posts []*model.Post
-		_, err := s.GetReplica().Select(&posts, "SELECT * FROM Posts WHERE ChannelId = :ChannelId AND DeleteAt = 0 ORDER BY CreateAt DESC LIMIT :Limit OFFSET :Offset", map[string]interface{}{"ChannelId": channelId, "Offset": offset, "Limit": limit})
+		_, err := s.GetReplica().Select(&posts, "SELECT * FROM Posts WHERE ChannelId = :ChannelId AND DeleteAt = 0 ORDER BY AutoId DESC LIMIT :Limit OFFSET :Offset", map[string]interface{}{"ChannelId": channelId, "Offset": offset, "Limit": limit})
 		if err != nil {
 			result.Err = model.NewAppError("SqlPostStore.GetLinearPosts", "store.sql_post.get_root_posts.app_error", nil, "channelId="+channelId+err.Error(), http.StatusInternalServerError)
 		} else {
@@ -686,14 +685,14 @@ func (s SqlPostStore) getParentsPosts(channelId string, offset int, limit int) s
 			    WHERE
 			        ChannelId = :ChannelId1
 			            AND DeleteAt = 0
-			    ORDER BY CreateAt DESC
+			    ORDER BY AutoId DESC
 			    LIMIT :Limit OFFSET :Offset) q3
 			    WHERE q3.RootId != '') q1
 			    ON q1.RootId = q2.Id OR q1.RootId = q2.RootId
 			WHERE
 			    ChannelId = :ChannelId2
 			        AND DeleteAt = 0
-			ORDER BY CreateAt`,
+			ORDER BY AutoId`,
 			map[string]interface{}{"ChannelId1": channelId, "Offset": offset, "Limit": limit, "ChannelId2": channelId})
 		if err != nil {
 			result.Err = model.NewAppError("SqlPostStore.GetLinearPosts", "store.sql_post.get_parents_posts.app_error", nil, "channelId="+channelId+err.Error(), http.StatusInternalServerError)
@@ -767,7 +766,7 @@ func (s SqlPostStore) Search(teamId string, userId string, params *model.SearchP
 							AND DeleteAt = 0
 							CHANNEL_FILTER)
 				SEARCH_CLAUSE
-				ORDER BY CreateAt DESC
+				ORDER BY AutoId DESC
 			LIMIT 100`
 
 		if len(params.InChannels) > 1 {
@@ -1057,7 +1056,7 @@ func (s SqlPostStore) GetPostsByIds(postIds []string) store.StoreChannel {
 			params[key] = postId
 		}
 
-		query := `SELECT * FROM Posts WHERE Id in (` + keys.String() + `) and DeleteAt = 0 ORDER BY CreateAt DESC`
+		query := `SELECT * FROM Posts WHERE Id in (` + keys.String() + `) and DeleteAt = 0 ORDER BY AutoId DESC`
 
 		var posts []*model.Post
 		_, err := s.GetReplica().Select(&posts, query, params)
@@ -1087,7 +1086,7 @@ func (s SqlPostStore) GetPostsBatchForIndexing(startTime int64, endTime int64, l
 				AND
 					Posts.CreateAt < :EndTime
 				ORDER BY
-					CreateAt ASC
+					AutoId ASC
 				LIMIT
 					1000
 				)
@@ -1138,7 +1137,7 @@ func (s SqlPostStore) PermanentDeleteBatch(endTime int64, limit int64) store.Sto
 func (s SqlPostStore) GetOldest() store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		var post model.Post
-		err := s.GetReplica().SelectOne(&post, "SELECT * FROM Posts ORDER BY CreateAt LIMIT 1")
+		err := s.GetReplica().SelectOne(&post, "SELECT * FROM Posts ORDER BY AutoId LIMIT 1")
 		if err != nil {
 			result.Err = model.NewAppError("SqlPostStore.GetOldest", "store.sql_post.get.app_error", nil, err.Error(), http.StatusNotFound)
 		}
