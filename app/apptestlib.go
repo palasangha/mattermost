@@ -242,7 +242,7 @@ func (me *TestHelper) CreatePost(channel *model.Channel) *model.Post {
 func (me *TestHelper) LinkUserToTeam(user *model.User, team *model.Team) {
 	utils.DisableDebugLogForTest()
 
-	err := me.App.JoinUserToTeam(team, user, "")
+	_, err := me.App.AddTeamMember(team.Id, user.Id, "")
 	if err != nil {
 		l4g.Error(err.Error())
 		l4g.Close()

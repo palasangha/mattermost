@@ -837,6 +837,11 @@ func addChannelMember(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if channel.DeleteAt > 0 {
+		c.Err = model.NewAppError("addChannelMember", "api.channel.add_user_to_channel.deleted.app_error", nil, "", http.StatusBadRequest)
+		return
+	}
+
 	// Check join permission if adding yourself, otherwise check manage permission
 	if channel.Type == model.CHANNEL_OPEN {
 		if member.UserId == c.Session.UserId {
@@ -858,11 +863,34 @@ func addChannelMember(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if channel.Type == model.CHANNEL_DIRECT || channel.Type == model.CHANNEL_GROUP {
-		c.Err = model.NewAppError("addUserToChannel", "api.channel.add_user_to_channel.type.app_error", nil, "", http.StatusBadRequest)
+		c.Err = model.NewAppError("addChannelMember", "api.channel.add_user_to_channel.type.app_error", nil, "", http.StatusBadRequest)
 		return
 	}
 
-	if cm, err := c.App.AddChannelMember(member.UserId, channel, c.Session.UserId, postRootId); err != nil {
+	if result := <-c.App.Srv.Store.Team().GetMember(channel.TeamId, c.Session.UserId); result.Err != nil {
+		c.Err = result.Err
+		return
+	} else {
+		teamMember := result.Data.(*model.TeamMember)
+		if teamMember.DeleteAt > 0 {
+			c.Err = model.NewAppError("AddUserToChannel", "api.channel.add_user.to.channel.failed.deleted.app_error", nil, "", http.StatusBadRequest)
+			return
+		}
+	}
+
+	var user *model.User
+	if user, err = c.App.GetUser(member.UserId); err != nil {
+		c.Err = err
+		return
+	}
+
+	var requestorUser *model.User
+	if requestorUser, err = c.App.GetUser(c.Session.UserId); err != nil {
+		c.Err = err
+		return
+	}
+
+	if cm, err := c.App.JoinUserToChannel(channel, user, requestorUser, postRootId); err != nil {
 		c.Err = err
 		return
 	} else {

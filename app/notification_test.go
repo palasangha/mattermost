@@ -17,7 +17,7 @@ func TestSendNotifications(t *testing.T) {
 	th := Setup().InitBasic()
 	defer th.TearDown()
 
-	th.App.AddUserToChannel(th.BasicUser2, th.BasicChannel)
+	th.App.JoinUserToChannel(th.BasicChannel, th.BasicUser2, nil, "")
 
 	post1, err := th.App.CreatePostMissingChannel(&model.Post{
 		UserId:    th.BasicUser.Id,

@@ -107,7 +107,7 @@ func TestAddUserToTeam(t *testing.T) {
 	user := model.User{Email: strings.ToLower(model.NewId()) + "success+test@example.com", Nickname: "Darth Vader", Username: "vader" + model.NewId(), Password: "passwd1", AuthService: ""}
 	ruser, _ := th.App.CreateUser(&user)
 
-	if _, err := th.App.AddUserToTeam(th.BasicTeam.Id, ruser.Id, ""); err != nil {
+	if _, err := th.App.AddTeamMember(th.BasicTeam.Id, ruser.Id, ""); err != nil {
 		t.Log(err)
 		t.Fatal("Should add user to the team")
 	}
@@ -120,7 +120,7 @@ func TestAddUserToTeamByTeamId(t *testing.T) {
 	user := model.User{Email: strings.ToLower(model.NewId()) + "success+test@example.com", Nickname: "Darth Vader", Username: "vader" + model.NewId(), Password: "passwd1", AuthService: ""}
 	ruser, _ := th.App.CreateUser(&user)
 
-	if err := th.App.AddUserToTeamByTeamId(th.BasicTeam.Id, ruser); err != nil {
+	if _, err := th.App.AddTeamMember(th.BasicTeam.Id, ruser.Id, ""); err != nil {
 		t.Log(err)
 		t.Fatal("Should add user to the team")
 	}
@@ -456,7 +456,7 @@ func TestAddUserToTeamByHashMismatchedInviteId(t *testing.T) {
 	})
 
 	// this should fail because the invite ids are mismatched
-	team, err := app.AddUserToTeamByHash(userId, hash, data)
+	team, err := app.AddTeamMemberByHash(userId, hash, data)
 	assert.Nil(t, team)
 	assert.Equal(t, "api.user.create_user.signup_link_mismatched_invite_id.app_error", err.Id)
 }
@@ -491,7 +491,7 @@ func TestJoinUserToTeam(t *testing.T) {
 		ruser, _ := th.App.CreateUser(&user)
 		defer th.App.PermanentDeleteUser(&user)
 
-		if _, alreadyAdded, err := th.App.joinUserToTeam(team, ruser); alreadyAdded || err != nil {
+		if _, err := th.App.AddTeamMember(team.Id, ruser.Id, ""); err != nil {
 			t.Fatal("Should return already added equal to false and no error")
 		}
 	})
@@ -501,8 +501,8 @@ func TestJoinUserToTeam(t *testing.T) {
 		ruser, _ := th.App.CreateUser(&user)
 		defer th.App.PermanentDeleteUser(&user)
 
-		th.App.joinUserToTeam(team, ruser)
-		if _, alreadyAdded, err := th.App.joinUserToTeam(team, ruser); !alreadyAdded || err != nil {
+		th.App.AddTeamMember(team.Id, ruser.Id, "")
+		if _, err := th.App.AddTeamMember(team.Id, ruser.Id, ""); err != nil {
 			t.Fatal("Should return already added and no error")
 		}
 	})
@@ -512,9 +512,9 @@ func TestJoinUserToTeam(t *testing.T) {
 		ruser, _ := th.App.CreateUser(&user)
 		defer th.App.PermanentDeleteUser(&user)
 
-		th.App.joinUserToTeam(team, ruser)
+		th.App.AddTeamMember(team.Id, ruser.Id, "")
 		th.App.LeaveTeam(team, ruser, ruser.Id)
-		if _, alreadyAdded, err := th.App.joinUserToTeam(team, ruser); alreadyAdded || err != nil {
+		if _, err := th.App.AddTeamMember(team.Id, ruser.Id, ""); err != nil {
 			t.Fatal("Should return already added equal to false and no error")
 		}
 	})
@@ -526,8 +526,8 @@ func TestJoinUserToTeam(t *testing.T) {
 		ruser2, _ := th.App.CreateUser(&user2)
 		defer th.App.PermanentDeleteUser(&user1)
 		defer th.App.PermanentDeleteUser(&user2)
-		th.App.joinUserToTeam(team, ruser1)
-		if _, _, err := th.App.joinUserToTeam(team, ruser2); err == nil {
+		th.App.AddTeamMember(team.Id, ruser1.Id, "")
+		if _, err := th.App.AddTeamMember(team.Id, ruser2.Id, ""); err == nil {
 			t.Fatal("Should fail")
 		}
 	})
@@ -540,11 +540,34 @@ func TestJoinUserToTeam(t *testing.T) {
 		defer th.App.PermanentDeleteUser(&user1)
 		defer th.App.PermanentDeleteUser(&user2)
 
-		th.App.joinUserToTeam(team, ruser1)
+		th.App.AddTeamMember(team.Id, ruser1.Id, "")
 		th.App.LeaveTeam(team, ruser1, ruser1.Id)
-		th.App.joinUserToTeam(team, ruser2)
-		if _, _, err := th.App.joinUserToTeam(team, ruser1); err == nil {
+		th.App.AddTeamMember(team.Id, ruser2.Id, "")
+		if _, err := th.App.AddTeamMember(team.Id, ruser1.Id, ""); err == nil {
 			t.Fatal("Should fail")
 		}
 	})
+}
+
+func BenchmarkBatchAddUsersToTeam(b *testing.B) {
+	th := Setup().InitBasic()
+	defer th.TearDown()
+
+	NUM_PER_BATCH := 20
+
+	users := make([]string, 0, b.N*NUM_PER_BATCH)
+	for i := 0; i < b.N; i++ {
+		for i := 0; i < NUM_PER_BATCH; i++ {
+			user := th.CreateUser()
+			users = append(users, user.Id)
+		}
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		usersToAdd := users[i*NUM_PER_BATCH : (i+1)*NUM_PER_BATCH]
+		_, err := th.App.AddTeamMembers(th.BasicTeam.Id, usersToAdd, th.BasicUser.Id)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }

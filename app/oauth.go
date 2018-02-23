@@ -476,7 +476,7 @@ func (a *App) LoginByOAuth(service string, userData io.Reader, teamId string) (*
 	}
 
 	if len(teamId) > 0 {
-		err = a.AddUserToTeamByTeamId(teamId, user)
+		_, err = a.AddTeamMember(teamId, user.Id, "")
 	}
 
 	if err != nil {

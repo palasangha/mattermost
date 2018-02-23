@@ -71,7 +71,7 @@ func (a *App) CreateUserWithHash(user *model.User, hash string, data string) (*m
 		return nil, err
 	}
 
-	if err := a.JoinUserToTeam(team, ruser, ""); err != nil {
+	if _, err := a.AddTeamMember(team.Id, ruser.Id, ""); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (a *App) CreateUserWithInviteId(user *model.User, inviteId string) (*model.
 		return nil, err
 	}
 
-	if err := a.JoinUserToTeam(team, ruser, ""); err != nil {
+	if _, err := a.AddTeamMember(team.Id, ruser.Id, ""); err != nil {
 		return nil, err
 	}
 
@@ -290,7 +290,7 @@ func (a *App) CreateOAuthUser(service string, userData io.Reader, teamId string)
 	}
 
 	if len(teamId) > 0 {
-		err = a.AddUserToTeamByTeamId(teamId, user)
+		_, err = a.AddTeamMember(teamId, user.Id, "")
 		if err != nil {
 			return nil, err
 		}
@@ -1574,5 +1574,12 @@ func (a *App) UpdateOAuthUserAttrs(userData io.Reader, user *model.User, provide
 		a.InvalidateCacheForUser(user.Id)
 	}
 
+	return nil
+}
+
+func (a *App) SetUserUpdated(userId string) *model.AppError {
+	if uua := <-a.Srv.Store.User().UpdateUpdateAt(userId); uua.Err != nil {
+		return uua.Err
+	}
 	return nil
 }

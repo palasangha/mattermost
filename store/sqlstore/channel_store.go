@@ -758,7 +758,7 @@ func (s SqlChannelStore) saveMemberT(transaction *gorp.Transaction, member *mode
 	}
 
 	if err := transaction.Insert(member); err != nil {
-		if IsUniqueConstraintError(err, []string{"ChannelId", "channelmembers_pkey"}) {
+		if IsUniqueConstraintError(err, []string{"PRIMARY"}) {
 			result.Err = model.NewAppError("SqlChannelStore.SaveMember", "store.sql_channel.save_member.exists.app_error", nil, "channel_id="+member.ChannelId+", user_id="+member.UserId+", "+err.Error(), http.StatusBadRequest)
 		} else {
 			result.Err = model.NewAppError("SqlChannelStore.SaveMember", "store.sql_channel.save_member.save.app_error", nil, "channel_id="+member.ChannelId+", user_id="+member.UserId+", "+err.Error(), http.StatusInternalServerError)

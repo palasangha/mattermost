@@ -168,7 +168,7 @@ func (a *App) SlackAddUsers(teamId string, slackusers []SlackUser, log *bytes.Bu
 		if result := <-a.Srv.Store.User().GetByEmail(email); result.Err == nil {
 			existingUser := result.Data.(*model.User)
 			addedUsers[sUser.Id] = existingUser
-			if err := a.JoinUserToTeam(team, addedUsers[sUser.Id], ""); err != nil {
+			if _, err := a.AddTeamMember(team.Id, addedUsers[sUser.Id].Id, ""); err != nil {
 				log.WriteString(utils.T("api.slackimport.slack_add_users.merge_existing_failed", map[string]interface{}{"Email": existingUser.Email, "Username": existingUser.Username}))
 			} else {
 				log.WriteString(utils.T("api.slackimport.slack_add_users.merge_existing", map[string]interface{}{"Email": existingUser.Email, "Username": existingUser.Username}))
@@ -433,7 +433,7 @@ func (a *App) addSlackUsersToChannel(members []string, users map[string]*model.U
 		if user, ok := users[member]; !ok {
 			log.WriteString(utils.T("api.slackimport.slack_add_channels.failed_to_add_user", map[string]interface{}{"Username": "?"}))
 		} else {
-			if _, err := a.AddUserToChannel(user, channel); err != nil {
+			if _, err := a.JoinUserToChannel(channel, user, nil, ""); err != nil {
 				log.WriteString(utils.T("api.slackimport.slack_add_channels.failed_to_add_user", map[string]interface{}{"Username": user.Username}))
 			}
 		}

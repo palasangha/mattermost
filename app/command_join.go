@@ -49,7 +49,12 @@ func (me *JoinProvider) DoCommand(a *App, args *model.CommandArgs, message strin
 				return &model.CommandResponse{Text: args.T("api.command_join.fail.app_error"), ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL}
 			}
 
-			if err := a.JoinChannel(channel, args.UserId); err != nil {
+			user, err := a.GetUser(args.UserId)
+			if err != nil {
+				return &model.CommandResponse{Text: args.T("api.command_join.fail.app_error"), ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL}
+			}
+
+			if _, err := a.JoinUserToChannel(channel, user, nil, ""); err != nil {
 				return &model.CommandResponse{Text: args.T("api.command_join.fail.app_error"), ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL}
 			}
 

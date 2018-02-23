@@ -56,7 +56,7 @@ func TestPostReplyToPostWhereRootPosterLeftChannel(t *testing.T) {
 	userNotInChannel := th.BasicUser
 	rootPost := th.BasicPost
 
-	if _, err := th.App.AddUserToChannel(userInChannel, channel); err != nil {
+	if _, err := th.App.JoinUserToChannel(channel, userInChannel, nil, ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -159,7 +159,7 @@ func TestPostChannelMentions(t *testing.T) {
 	}
 	defer th.App.PermanentDeleteChannel(channelToMention)
 
-	_, err = th.App.AddUserToChannel(user, channel)
+	_, err = th.App.JoinUserToChannel(channel, user, nil, "")
 	require.Nil(t, err)
 
 	post := &model.Post{

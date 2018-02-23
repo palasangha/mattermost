@@ -163,7 +163,7 @@ func addUserToTeam(a *app.App, team *model.Team, user *model.User, userArg strin
 		CommandPrintErrorln("Can't find user '" + userArg + "'")
 		return
 	}
-	if err := a.JoinUserToTeam(team, user, ""); err != nil {
+	if _, err := a.AddTeamMember(team.Id, user.Id, ""); err != nil {
 		CommandPrintErrorln("Unable to add '" + userArg + "' to " + team.Name)
 	}
 }

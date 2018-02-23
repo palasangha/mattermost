@@ -404,9 +404,22 @@ func join(c *Context, w http.ResponseWriter, r *http.Request) {
 			c.SetPermissionError(model.PERMISSION_JOIN_PUBLIC_CHANNELS)
 			return
 		}
+	} else {
+		if _, err := c.App.GetChannelMember(channel.Id, c.Session.UserId); err == nil {
+			w.Write([]byte(channel.ToJson()))
+			return
+		}
+		c.Err = model.NewAppError("join", "api.channel.join_channel.permissions.app_error", nil, "", http.StatusBadRequest)
+		return
 	}
 
-	if err = c.App.JoinChannel(channel, c.Session.UserId); err != nil {
+	var user *model.User
+	if user, err = c.App.GetUser(c.Session.UserId); err != nil {
+		c.Err = err
+		return
+	}
+
+	if _, err = c.App.JoinUserToChannel(channel, user, nil, ""); err != nil {
 		c.Err = err
 		return
 	}
@@ -632,7 +645,7 @@ func addMember(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cm, err := c.App.AddUserToChannel(nUser, channel)
+	cm, err := c.App.JoinUserToChannel(channel, nUser, nil, "")
 	if err != nil {
 		c.Err = err
 		return
@@ -645,10 +658,6 @@ func addMember(c *Context, w http.ResponseWriter, r *http.Request) {
 		c.Err = model.NewAppError("addMember", "api.channel.add_member.user_adding.app_error", nil, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	c.App.Go(func() {
-		c.App.PostAddToChannelMessage(oUser, nUser, channel, "")
-	})
 
 	c.App.UpdateChannelLastViewedAt([]string{id}, oUser.Id)
 	w.Write([]byte(cm.ToJson()))

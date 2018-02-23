@@ -515,7 +515,12 @@ func (a *App) GetPermalinkPost(postId string, userId string) (*model.PostList, *
 			return nil, err
 		}
 
-		if err = a.JoinChannel(channel, userId); err != nil {
+		var user *model.User
+		if user, err = a.GetUser(userId); err != nil {
+			return nil, err
+		}
+
+		if _, err = a.JoinUserToChannel(channel, user, nil, ""); err != nil {
 			return nil, err
 		}
 

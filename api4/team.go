@@ -359,7 +359,7 @@ func addTeamMember(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	member, err = c.App.AddTeamMember(member.TeamId, member.UserId)
+	member, err = c.App.AddTeamMember(member.TeamId, member.UserId, c.Session.UserId)
 
 	if err != nil {
 		c.Err = err

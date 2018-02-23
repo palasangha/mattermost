@@ -79,21 +79,21 @@ func TestMoveChannel(t *testing.T) {
 		th.App.PermanentDeleteTeam(targetTeam)
 	}()
 
-	if _, err := th.App.AddUserToTeam(sourceTeam.Id, th.BasicUser.Id, ""); err != nil {
+	if _, err := th.App.AddTeamMember(sourceTeam.Id, th.BasicUser.Id, ""); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := th.App.AddUserToTeam(sourceTeam.Id, th.BasicUser2.Id, ""); err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := th.App.AddUserToTeam(targetTeam.Id, th.BasicUser.Id, ""); err != nil {
+	if _, err := th.App.AddTeamMember(sourceTeam.Id, th.BasicUser2.Id, ""); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := th.App.AddUserToChannel(th.BasicUser, channel1); err != nil {
+	if _, err := th.App.AddTeamMember(targetTeam.Id, th.BasicUser.Id, ""); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := th.App.AddUserToChannel(th.BasicUser2, channel1); err != nil {
+
+	if _, err := th.App.JoinUserToChannel(channel1, th.BasicUser, nil, ""); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := th.App.JoinUserToChannel(channel1, th.BasicUser2, nil, ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -101,7 +101,7 @@ func TestMoveChannel(t *testing.T) {
 		t.Fatal("Should have failed due to mismatched members.")
 	}
 
-	if _, err := th.App.AddUserToTeam(targetTeam.Id, th.BasicUser2.Id, ""); err != nil {
+	if _, err := th.App.AddTeamMember(targetTeam.Id, th.BasicUser2.Id, ""); err != nil {
 		t.Fatal(err)
 	}
 
@@ -120,7 +120,7 @@ func TestJoinDefaultChannelsTownSquare(t *testing.T) {
 
 	// create a new user that joins the default channels
 	user := th.CreateUser()
-	th.App.JoinDefaultChannels(th.BasicTeam.Id, user, model.CHANNEL_USER_ROLE_ID, "")
+	th.App.JoinUsersToDefaultChannels(th.BasicTeam.Id, []*model.User{user}, nil)
 
 	// there should be a ChannelMemberHistory record for the user
 	histories := store.Must(th.App.Srv.Store.ChannelMemberHistory().GetUsersInChannelDuring(model.GetMillis()-100, model.GetMillis()+100, townSquareChannelId)).([]*model.ChannelMemberHistoryResult)
@@ -146,7 +146,7 @@ func TestJoinDefaultChannelsOffTopic(t *testing.T) {
 
 	// create a new user that joins the default channels
 	user := th.CreateUser()
-	th.App.JoinDefaultChannels(th.BasicTeam.Id, user, model.CHANNEL_USER_ROLE_ID, "")
+	th.App.JoinUsersToDefaultChannels(th.BasicTeam.Id, []*model.User{user}, nil)
 
 	// there should be a ChannelMemberHistory record for the user
 	histories := store.Must(th.App.Srv.Store.ChannelMemberHistory().GetUsersInChannelDuring(model.GetMillis()-100, model.GetMillis()+100, offTopicChannelId)).([]*model.ChannelMemberHistoryResult)
@@ -233,13 +233,13 @@ func TestCreateGroupChannel(t *testing.T) {
 	}
 }
 
-func TestAddUserToChannel(t *testing.T) {
+func TestJoinUserToChannel(t *testing.T) {
 	th := Setup().InitBasic()
 	defer th.TearDown()
 
 	// create a user and add it to a channel
 	user := th.CreateUser()
-	if _, err := th.App.AddTeamMember(th.BasicTeam.Id, user.Id); err != nil {
+	if _, err := th.App.AddTeamMember(th.BasicTeam.Id, user.Id, ""); err != nil {
 		t.Fatal("Failed to add user to team. Error: " + err.Message)
 	}
 
@@ -248,7 +248,7 @@ func TestAddUserToChannel(t *testing.T) {
 	groupUserIds = append(groupUserIds, user.Id)
 
 	channel := th.createChannel(th.BasicTeam, model.CHANNEL_OPEN)
-	if _, err := th.App.AddUserToChannel(user, channel); err != nil {
+	if _, err := th.App.JoinUserToChannel(channel, user, nil, ""); err != nil {
 		t.Fatal("Failed to add user to channel. Error: " + err.Message)
 	}
 

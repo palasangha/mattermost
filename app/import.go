@@ -807,7 +807,7 @@ func (a *App) ImportUserTeams(user *model.User, data *[]UserTeamImportData) *mod
 		}
 
 		var member *model.TeamMember
-		if member, _, err = a.joinUserToTeam(team, user); err != nil {
+		if member, err = a.createOrUpdateTeamMember(team.Id, user.Id); err != nil {
 			return err
 		}
 
@@ -819,7 +819,7 @@ func (a *App) ImportUserTeams(user *model.User, data *[]UserTeamImportData) *mod
 
 		if defaultChannel, err := a.GetChannelByName(model.DEFAULT_CHANNEL, team.Id); err != nil {
 			return err
-		} else if _, err = a.addUserToChannel(user, defaultChannel, member); err != nil {
+		} else if _, err = a.JoinUserToChannel(defaultChannel, user, nil, ""); err != nil {
 			return err
 		}
 
@@ -855,7 +855,7 @@ func (a *App) ImportUserChannels(user *model.User, team *model.Team, teamMember 
 		var member *model.ChannelMember
 		member, err = a.GetChannelMember(channel.Id, user.Id)
 		if err != nil {
-			member, err = a.addUserToChannel(user, channel, teamMember)
+			member, err = a.JoinUserToChannel(channel, user, nil, "")
 			if err != nil {
 				return err
 			}
@@ -1683,7 +1683,7 @@ func (a *App) OldImportUser(team *model.Team, user *model.User) *model.User {
 			l4g.Error(utils.T("api.import.import_user.set_email.error"), cresult.Err)
 		}
 
-		if err := a.JoinUserToTeam(team, user, ""); err != nil {
+		if _, err := a.AddTeamMember(team.Id, user.Id, ""); err != nil {
 			l4g.Error(utils.T("api.import.import_user.join_team.error"), err)
 		}
 

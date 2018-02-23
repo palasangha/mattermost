@@ -333,7 +333,7 @@ func TestCreatePostPublic(t *testing.T) {
 	CheckForbiddenStatus(t, resp)
 
 	th.App.UpdateUserRoles(ruser.Id, model.SYSTEM_USER_ROLE_ID, false)
-	th.App.JoinUserToTeam(th.BasicTeam, ruser, "")
+	th.App.AddTeamMember(th.BasicTeam.Id, ruser.Id, "")
 	th.App.UpdateTeamMemberRoles(th.BasicTeam.Id, ruser.Id, model.TEAM_USER_ROLE_ID+" "+model.TEAM_POST_ALL_PUBLIC_ROLE_ID)
 	th.App.InvalidateAllCaches()
 
@@ -384,7 +384,7 @@ func TestCreatePostAll(t *testing.T) {
 	CheckNoError(t, resp)
 
 	th.App.UpdateUserRoles(ruser.Id, model.SYSTEM_USER_ROLE_ID, false)
-	th.App.JoinUserToTeam(th.BasicTeam, ruser, "")
+	th.App.AddTeamMember(th.BasicTeam.Id, ruser.Id, "")
 	th.App.UpdateTeamMemberRoles(th.BasicTeam.Id, ruser.Id, model.TEAM_USER_ROLE_ID+" "+model.TEAM_POST_ALL_ROLE_ID)
 	th.App.InvalidateAllCaches()
 
@@ -416,7 +416,7 @@ func TestCreatePostSendOutOfChannelMentions(t *testing.T) {
 
 	inChannelUser := th.CreateUser()
 	th.LinkUserToTeam(inChannelUser, th.BasicTeam)
-	th.App.AddUserToChannel(inChannelUser, th.BasicChannel)
+	th.App.JoinUserToChannel(th.BasicChannel, inChannelUser, nil, "")
 
 	post1 := &model.Post{ChannelId: th.BasicChannel.Id, Message: "@" + inChannelUser.Username}
 	_, resp := Client.CreatePost(post1)
@@ -1384,8 +1384,8 @@ func TestSearchPostsFromUser(t *testing.T) {
 	th.LoginTeamAdmin()
 	user := th.CreateUser()
 	th.LinkUserToTeam(user, th.BasicTeam)
-	th.App.AddUserToChannel(user, th.BasicChannel)
-	th.App.AddUserToChannel(user, th.BasicChannel2)
+	th.App.JoinUserToChannel(th.BasicChannel, user, nil, "")
+	th.App.JoinUserToChannel(th.BasicChannel2, user, nil, "")
 
 	message := "sgtitlereview with space"
 	_ = th.CreateMessagePost(message)

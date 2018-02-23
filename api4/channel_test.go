@@ -785,7 +785,7 @@ func TestDeleteChannel(t *testing.T) {
 
 	if ch, err := th.App.GetChannel(publicChannel1.Id); err == nil && ch.DeleteAt == 0 {
 		t.Fatal("should have failed to get deleted channel")
-	} else if err := th.App.JoinChannel(ch, user2.Id); err == nil {
+	} else if _, err := Client.AddChannelMember(ch.Id, user2.Id); err == nil {
 		t.Fatal("should have failed to join deleted channel")
 	}
 
@@ -801,7 +801,7 @@ func TestDeleteChannel(t *testing.T) {
 
 	// successful delete of channel with multiple members
 	publicChannel3 := th.CreatePublicChannel()
-	th.App.AddUserToChannel(user2, publicChannel3)
+	th.App.JoinUserToChannel(publicChannel3, user2, nil, "")
 	_, resp = Client.DeleteChannel(publicChannel3.Id)
 	CheckNoError(t, resp)
 
@@ -876,9 +876,9 @@ func TestDeleteChannel(t *testing.T) {
 	// channels created by SystemAdmin
 	publicChannel6 := th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_OPEN)
 	privateChannel7 := th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_PRIVATE)
-	th.App.AddUserToChannel(user, publicChannel6)
-	th.App.AddUserToChannel(user, privateChannel7)
-	th.App.AddUserToChannel(user2, privateChannel7)
+	th.App.JoinUserToChannel(publicChannel6, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user2, nil, "")
 
 	// successful delete by user
 	_, resp = Client.DeleteChannel(publicChannel6.Id)
@@ -895,9 +895,9 @@ func TestDeleteChannel(t *testing.T) {
 	// channels created by SystemAdmin
 	publicChannel6 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_OPEN)
 	privateChannel7 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_PRIVATE)
-	th.App.AddUserToChannel(user, publicChannel6)
-	th.App.AddUserToChannel(user, privateChannel7)
-	th.App.AddUserToChannel(user2, privateChannel7)
+	th.App.JoinUserToChannel(publicChannel6, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user2, nil, "")
 
 	// cannot delete by user
 	_, resp = Client.DeleteChannel(publicChannel6.Id)
@@ -920,9 +920,9 @@ func TestDeleteChannel(t *testing.T) {
 	// // channels created by SystemAdmin
 	publicChannel6 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_OPEN)
 	privateChannel7 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_PRIVATE)
-	th.App.AddUserToChannel(user, publicChannel6)
-	th.App.AddUserToChannel(user, privateChannel7)
-	th.App.AddUserToChannel(user2, privateChannel7)
+	th.App.JoinUserToChannel(publicChannel6, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user2, nil, "")
 
 	// successful delete by team admin
 	th.UpdateUserToTeamAdmin(user, team)
@@ -946,9 +946,9 @@ func TestDeleteChannel(t *testing.T) {
 	// channels created by SystemAdmin
 	publicChannel6 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_OPEN)
 	privateChannel7 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_PRIVATE)
-	th.App.AddUserToChannel(user, publicChannel6)
-	th.App.AddUserToChannel(user, privateChannel7)
-	th.App.AddUserToChannel(user2, privateChannel7)
+	th.App.JoinUserToChannel(publicChannel6, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user2, nil, "")
 
 	// cannot delete by user
 	_, resp = Client.DeleteChannel(publicChannel6.Id)
@@ -987,9 +987,9 @@ func TestDeleteChannel(t *testing.T) {
 	// channels created by SystemAdmin
 	publicChannel6 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_OPEN)
 	privateChannel7 = th.CreateChannelWithClient(th.SystemAdminClient, model.CHANNEL_PRIVATE)
-	th.App.AddUserToChannel(user, publicChannel6)
-	th.App.AddUserToChannel(user, privateChannel7)
-	th.App.AddUserToChannel(user2, privateChannel7)
+	th.App.JoinUserToChannel(publicChannel6, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user, nil, "")
+	th.App.JoinUserToChannel(privateChannel7, user2, nil, "")
 
 	// cannot delete by user
 	_, resp = Client.DeleteChannel(publicChannel6.Id)
@@ -1536,7 +1536,7 @@ func TestUpdateChannelRoles(t *testing.T) {
 	channel := th.CreatePublicChannel()
 
 	// Adds User 2 to the channel, making them a channel member by default.
-	th.App.AddUserToChannel(th.BasicUser2, channel)
+	th.App.JoinUserToChannel(channel, th.BasicUser2, nil, "")
 
 	// User 1 promotes User 2
 	pass, resp := Client.UpdateChannelRoles(channel.Id, th.BasicUser2.Id, CHANNEL_ADMIN)
@@ -1901,7 +1901,7 @@ func TestRemoveChannelMember(t *testing.T) {
 	_, resp = Client.RemoveUserFromChannel(th.BasicChannel.Id, th.BasicUser.Id)
 	CheckForbiddenStatus(t, resp)
 
-	th.App.AddUserToChannel(th.BasicUser2, th.BasicChannel)
+	th.App.JoinUserToChannel(th.BasicChannel, th.BasicUser2, nil, "")
 	_, resp = Client.RemoveUserFromChannel(th.BasicChannel.Id, th.BasicUser2.Id)
 	CheckNoError(t, resp)
 
@@ -1913,7 +1913,7 @@ func TestRemoveChannelMember(t *testing.T) {
 
 	th.LoginBasic()
 	private := th.CreatePrivateChannel()
-	th.App.AddUserToChannel(th.BasicUser2, private)
+	th.App.JoinUserToChannel(private, th.BasicUser2, nil, "")
 
 	_, resp = Client.RemoveUserFromChannel(private.Id, th.BasicUser2.Id)
 	CheckNoError(t, resp)

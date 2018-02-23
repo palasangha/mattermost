@@ -224,12 +224,12 @@ func (me *TestHelper) InitBasic() *TestHelper {
 	me.LinkUserToTeam(me.BasicUser, me.BasicTeam)
 	me.BasicUser2 = me.CreateUser()
 	me.LinkUserToTeam(me.BasicUser2, me.BasicTeam)
-	me.App.AddUserToChannel(me.BasicUser, me.BasicChannel)
-	me.App.AddUserToChannel(me.BasicUser2, me.BasicChannel)
-	me.App.AddUserToChannel(me.BasicUser, me.BasicChannel2)
-	me.App.AddUserToChannel(me.BasicUser2, me.BasicChannel2)
-	me.App.AddUserToChannel(me.BasicUser, me.BasicPrivateChannel)
-	me.App.AddUserToChannel(me.BasicUser2, me.BasicPrivateChannel)
+	me.App.JoinUserToChannel(me.BasicChannel, me.BasicUser, nil, "")
+	me.App.JoinUserToChannel(me.BasicChannel, me.BasicUser2, nil, "")
+	me.App.JoinUserToChannel(me.BasicChannel2, me.BasicUser, nil, "")
+	me.App.JoinUserToChannel(me.BasicChannel2, me.BasicUser2, nil, "")
+	me.App.JoinUserToChannel(me.BasicPrivateChannel, me.BasicUser, nil, "")
+	me.App.JoinUserToChannel(me.BasicPrivateChannel, me.BasicUser2, nil, "")
 	me.App.UpdateUserRoles(me.BasicUser.Id, model.SYSTEM_USER_ROLE_ID, false)
 	me.LoginBasic()
 
@@ -456,7 +456,7 @@ func (me *TestHelper) UpdateActiveUser(user *model.User, active bool) {
 func (me *TestHelper) LinkUserToTeam(user *model.User, team *model.Team) {
 	utils.DisableDebugLogForTest()
 
-	err := me.App.JoinUserToTeam(team, user, "")
+	_, err := me.App.AddTeamMember(team.Id, user.Id, "")
 	if err != nil {
 		l4g.Error(err.Error())
 		l4g.Close()
