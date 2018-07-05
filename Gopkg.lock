@@ -20,6 +20,12 @@
   revision = "c4be5581ec9617d04f5c5e02b893903ead0b1eed"
 
 [[projects]]
+  name = "github.com/beevik/etree"
+  packages = ["."]
+  revision = "9d7e8feddccb4ed1b8afb54e368bd323d2ff652c"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -239,6 +245,12 @@
   revision = "1d33003b386959af197ba96475f198c114627b5e"
 
 [[projects]]
+  name = "github.com/jonboulle/clockwork"
+  packages = ["."]
+  revision = "2eee05ed794112d45db504eb05aa693efd2b8b09"
+  version = "v0.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/lib/pq"
   packages = [
@@ -412,6 +424,16 @@
     "xfs"
   ]
   revision = "7d6f385de8bea29190f15ba9931442a0eaef9af7"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/russellhaering/goxmldsig"
+  packages = [
+    ".",
+    "etreeutils",
+    "types"
+  ]
+  revision = "7acd5e4a6ef74fe1b082c20f119556adf70c3944"
 
 [[projects]]
   branch = "go1"
@@ -685,6 +707,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "76d5a63bc94bc0a75fe311cbc1df579fdd77b5d039a006236c00ee122ab69c1b"
+  inputs-digest = "e5484f66326ce3c8236ecef9ce227b80063bcbe3c550d1fc6832c080b5d0211e"
   solver-name = "gps-cdcl"
   solver-version = 1
