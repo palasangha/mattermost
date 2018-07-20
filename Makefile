@@ -1,4 +1,4 @@
-.PHONY: build package run stop run-client run-server stop-client stop-server restart restart-server restart-client start-docker clean-dist clean nuke check-style check-client-style check-server-style check-unit-tests test dist setup-mac prepare-enteprise run-client-tests setup-run-client-tests cleanup-run-client-tests test-client build-linux build-osx build-windows internal-test-web-client vet run-server-for-web-client-tests
+.PHONY: build package run stop run-client run-server stop-client stop-server restart restart-server restart-client start-docker clean-dist clean nuke check-style check-client-style check-server-style check-unit-tests test dist setup-mac prepare-enteprise run-client-tests setup-run-client-tests cleanup-run-client-tests test-client build-linux build-osx build-windows internal-test-web-client vet run-server-for-web-client-tests proto
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -289,6 +289,10 @@ plugin-mocks: ## Creates mock files for plugins.
 
 pluginapi: ## Generates api and hooks glue code for plugins
 	go generate ./plugin
+
+proto:
+	# TODO: go get proteus
+	proteus proto -f $(GOPATH)/src/github.com/mattermost/mattermost-server/proto/ -p github.com/mattermost/mattermost-server/plugin -p github.com/mattermost/mattermost-server/model
 
 check-licenses: ## Checks license status.
 	./scripts/license-check.sh $(TE_PACKAGES) $(EE_PACKAGES)

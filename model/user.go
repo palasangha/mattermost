@@ -47,6 +47,7 @@ const (
 	USER_PASSWORD_MAX_LENGTH  = 72
 )
 
+//proteus:generate
 type User struct {
 	Id                 string    `json:"id"`
 	CreateAt           int64     `json:"create_at,omitempty"`

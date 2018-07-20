@@ -35,7 +35,7 @@ type IncomingWebhookRequest struct {
 	Username    string             `json:"username"`
 	IconURL     string             `json:"icon_url"`
 	ChannelName string             `json:"channel"`
-	Props       StringInterface    `json:"props"`
+	Props       StringInterface    `json:"props" proteus:"-"`
 	Attachments []*SlackAttachment `json:"attachments"`
 	Type        string             `json:"type"`
 }

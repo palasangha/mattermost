@@ -1,0 +1,1087 @@
+syntax = "proto3";
+package github.com.mattermost.mattermostserver.model;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "model";
+
+message AnalyticsSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 max_users_for_statistics = 1 [(gogoproto.casttype) = "int"];
+}
+
+message AnnouncementSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_banner = 1;
+	string banner_text = 2;
+	string banner_color = 3;
+	string banner_text_color = 4;
+	bool allow_banner_dismissal = 5;
+}
+
+message AppError {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string message = 2;
+	string detailed_error = 3;
+	string request_id = 4;
+	int64 status_code = 5 [(gogoproto.casttype) = "int"];
+	string where = 6;
+	bool is_oauth = 7 [(gogoproto.customname) = "IsOAuth"];
+}
+
+message Channel {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	int64 create_at = 2;
+	int64 update_at = 3;
+	int64 delete_at = 4;
+	string team_id = 5;
+	string type = 6;
+	string display_name = 7;
+	string name = 8;
+	string header = 9;
+	string purpose = 10;
+	int64 last_post_at = 11;
+	int64 total_msg_count = 12;
+	int64 extra_update_at = 13;
+	string creator_id = 14;
+	string scheme_id = 15;
+}
+
+message ChannelMember {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string channel_id = 1;
+	string user_id = 2;
+	string roles = 3;
+	int64 last_viewed_at = 4;
+	int64 msg_count = 5;
+	int64 mention_count = 6;
+	map<string, string> notify_props = 7 [(gogoproto.casttype) = "StringMap"];
+	int64 last_update_at = 8;
+	bool scheme_user = 9;
+	bool scheme_admin = 10;
+	string explicit_roles = 11;
+}
+
+message ClientRequirements {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string android_latest_version = 1;
+	string android_min_version = 2;
+	string desktop_latest_version = 3;
+	string desktop_min_version = 4;
+	string ios_latest_version = 5;
+	string ios_min_version = 6;
+}
+
+message ClusterSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	string cluster_name = 2;
+	string override_hostname = 3;
+	bool use_ip_address = 4;
+	bool use_experimental_gossip = 5;
+	bool read_only_config = 6;
+	int64 gossip_port = 7 [(gogoproto.casttype) = "int"];
+	int64 streaming_port = 8 [(gogoproto.casttype) = "int"];
+	int64 max_idle_conns = 9 [(gogoproto.casttype) = "int"];
+	int64 max_idle_conns_per_host = 10 [(gogoproto.casttype) = "int"];
+	int64 idle_conn_timeout_milliseconds = 11 [(gogoproto.casttype) = "int"];
+}
+
+message Command {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string token = 2;
+	int64 create_at = 3;
+	int64 update_at = 4;
+	int64 delete_at = 5;
+	string creator_id = 6;
+	string team_id = 7;
+	string trigger = 8;
+	string method = 9;
+	string username = 10;
+	string icon_url = 11 [(gogoproto.customname) = "IconURL"];
+	bool auto_complete = 12;
+	string auto_complete_desc = 13;
+	string auto_complete_hint = 14;
+	string display_name = 15;
+	string description = 16;
+	string url = 17 [(gogoproto.customname) = "URL"];
+}
+
+message CommandArgs {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string user_id = 1;
+	string channel_id = 2;
+	string team_id = 3;
+	string root_id = 4;
+	string parent_id = 5;
+	string command = 6;
+	string site_url = 7 [(gogoproto.customname) = "SiteURL"];
+	github.com.mattermost.mattermostserver.model.Session session = 8 [(gogoproto.nullable) = false];
+}
+
+message CommandResponse {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string response_type = 1;
+	string text = 2;
+	string username = 3;
+	string icon_url = 4 [(gogoproto.customname) = "IconURL"];
+	string type = 5;
+	string goto_location = 6;
+	repeated github.com.mattermost.mattermostserver.model.SlackAttachment attachments = 7;
+}
+
+message ComplianceSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	string directory = 2;
+	bool enable_daily = 3;
+}
+
+message Config {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	github.com.mattermost.mattermostserver.model.ServiceSettings service_settings = 1 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.TeamSettings team_settings = 2 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ClientRequirements client_requirements = 3 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SqlSettings sql_settings = 4 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.LogSettings log_settings = 5 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.PasswordSettings password_settings = 6 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.FileSettings file_settings = 7 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.EmailSettings email_settings = 8 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ExtensionSettings extension_settings = 9 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.RateLimitSettings rate_limit_settings = 10 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.PrivacySettings privacy_settings = 11 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SupportSettings support_settings = 12 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.AnnouncementSettings announcement_settings = 13 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ThemeSettings theme_settings = 14 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SSOSettings git_lab_settings = 15 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SSOSettings google_settings = 16 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SSOSettings office365_settings = 17 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.LdapSettings ldap_settings = 18 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ComplianceSettings compliance_settings = 19 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.LocalizationSettings localization_settings = 20 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.SamlSettings saml_settings = 21 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.NativeAppSettings native_app_settings = 22 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ClusterSettings cluster_settings = 23 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.MetricsSettings metrics_settings = 24 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ExperimentalSettings experimental_settings = 25 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.AnalyticsSettings analytics_settings = 26 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.WebrtcSettings webrtc_settings = 27 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.ElasticsearchSettings elasticsearch_settings = 28 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.DataRetentionSettings data_retention_settings = 29 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.MessageExportSettings message_export_settings = 30 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.JobSettings job_settings = 31 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.PluginSettings plugin_settings = 32 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.DisplaySettings display_settings = 33 [(gogoproto.nullable) = false];
+	github.com.mattermost.mattermostserver.model.TimezoneSettings timezone_settings = 34 [(gogoproto.nullable) = false];
+}
+
+message Customer {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string name = 2;
+	string email = 3;
+	string company = 4;
+	string phone_number = 5;
+}
+
+message DataRetentionSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_message_deletion = 1;
+	bool enable_file_deletion = 2;
+	int64 message_retention_days = 3 [(gogoproto.casttype) = "int"];
+	int64 file_retention_days = 4 [(gogoproto.casttype) = "int"];
+	string deletion_job_start_time = 5;
+}
+
+message DisplaySettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	repeated string custom_url_schemes = 1;
+	bool experimental_timezone = 2;
+}
+
+message ElasticsearchSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string connection_url = 1;
+	string username = 2;
+	string password = 3;
+	bool enable_indexing = 4;
+	bool enable_searching = 5;
+	bool sniff = 6;
+	int64 post_index_replicas = 7 [(gogoproto.casttype) = "int"];
+	int64 post_index_shards = 8 [(gogoproto.casttype) = "int"];
+	int64 aggregate_posts_after_days = 9 [(gogoproto.casttype) = "int"];
+	string posts_aggregator_job_start_time = 10;
+	string index_prefix = 11;
+	int64 live_indexing_batch_size = 12 [(gogoproto.casttype) = "int"];
+	int64 bulk_indexing_time_window_seconds = 13 [(gogoproto.casttype) = "int"];
+	int64 request_timeout_seconds = 14 [(gogoproto.casttype) = "int"];
+}
+
+message EmailSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_sign_up_with_email = 1;
+	bool enable_sign_in_with_email = 2;
+	bool enable_sign_in_with_username = 3;
+	bool send_email_notifications = 4;
+	bool use_channel_in_email_notifications = 5;
+	bool require_email_verification = 6;
+	string feedback_name = 7;
+	string feedback_email = 8;
+	string feedback_organization = 9;
+	bool enable_smtpauth = 10 [(gogoproto.customname) = "EnableSMTPAuth"];
+	string smtpusername = 11 [(gogoproto.customname) = "SMTPUsername"];
+	string smtppassword = 12 [(gogoproto.customname) = "SMTPPassword"];
+	string smtpserver = 13 [(gogoproto.customname) = "SMTPServer"];
+	string smtpport = 14 [(gogoproto.customname) = "SMTPPort"];
+	string connection_security = 15;
+	string invite_salt = 16;
+	bool send_push_notifications = 17;
+	string push_notification_server = 18;
+	string push_notification_contents = 19;
+	bool enable_email_batching = 20;
+	int64 email_batching_buffer_size = 21 [(gogoproto.casttype) = "int"];
+	int64 email_batching_interval = 22 [(gogoproto.casttype) = "int"];
+	bool enable_preview_mode_banner = 23;
+	bool skip_server_certificate_verification = 24;
+	string email_notification_contents_type = 25;
+	string login_button_color = 26;
+	string login_button_border_color = 27;
+	string login_button_text_color = 28;
+}
+
+message ExperimentalSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool client_side_cert_enable = 1;
+	string client_side_cert_check = 2;
+}
+
+message ExtensionSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_experimental_extensions = 1;
+	repeated string allowed_extensions_ids = 2 [(gogoproto.customname) = "AllowedExtensionsIDs"];
+}
+
+message Features {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 users = 1 [(gogoproto.casttype) = "int"];
+	bool ldap = 2 [(gogoproto.customname) = "LDAP"];
+	bool mfa = 3 [(gogoproto.customname) = "MFA"];
+	bool google_oauth = 4 [(gogoproto.customname) = "GoogleOAuth"];
+	bool office365_oauth = 5 [(gogoproto.customname) = "Office365OAuth"];
+	bool compliance = 6;
+	bool cluster = 7;
+	bool metrics = 8;
+	bool mhpns = 9 [(gogoproto.customname) = "MHPNS"];
+	bool saml = 10 [(gogoproto.customname) = "SAML"];
+	bool elasticsearch = 11;
+	bool announcement = 12;
+	bool theme_management = 13;
+	bool email_notification_contents = 14;
+	bool data_retention = 15;
+	bool message_export = 16;
+	bool custom_permissions_schemes = 17;
+	bool future_features = 18;
+}
+
+message FileInfo {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string creator_id = 2;
+	string post_id = 3;
+	int64 create_at = 4;
+	int64 update_at = 5;
+	int64 delete_at = 6;
+	string path = 7;
+	string thumbnail_path = 8;
+	string preview_path = 9;
+	string name = 10;
+	string extension = 11;
+	int64 size = 12;
+	string mime_type = 13;
+	int64 width = 14 [(gogoproto.casttype) = "int"];
+	int64 height = 15 [(gogoproto.casttype) = "int"];
+	bool has_preview_image = 16;
+}
+
+message FileSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_file_attachments = 1;
+	bool enable_mobile_upload = 2;
+	bool enable_mobile_download = 3;
+	int64 max_file_size = 4;
+	string driver_name = 5;
+	string directory = 6;
+	bool enable_public_link = 7;
+	string public_link_salt = 8;
+	string initial_font = 9;
+	string amazon_s3_access_key_id = 10;
+	string amazon_s3_secret_access_key = 11;
+	string amazon_s3_bucket = 12;
+	string amazon_s3_region = 13;
+	string amazon_s3_endpoint = 14;
+	bool amazon_s3_ssl = 15 [(gogoproto.customname) = "AmazonS3SSL"];
+	bool amazon_s3_sign_v2 = 16;
+	bool amazon_s3_sse = 17 [(gogoproto.customname) = "AmazonS3SSE"];
+	bool amazon_s3_trace = 18;
+}
+
+message GlobalRelayMessageExportSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string customer_type = 1;
+	string smtp_username = 2;
+	string smtp_password = 3;
+	string email_address = 4;
+}
+
+message Job {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string type = 2;
+	int64 priority = 3;
+	int64 create_at = 4;
+	int64 start_at = 5;
+	int64 last_activity_at = 6;
+	string status = 7;
+	int64 progress = 8;
+	map<string, string> data = 9;
+}
+
+message JobSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool run_jobs = 1;
+	bool run_scheduler = 2;
+}
+
+message LdapSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	bool enable_sync = 2;
+	string ldap_server = 3;
+	int64 ldap_port = 4 [(gogoproto.casttype) = "int"];
+	string connection_security = 5;
+	string base_dn = 6 [(gogoproto.customname) = "BaseDN"];
+	string bind_username = 7;
+	string bind_password = 8;
+	string user_filter = 9;
+	string first_name_attribute = 10;
+	string last_name_attribute = 11;
+	string email_attribute = 12;
+	string username_attribute = 13;
+	string nickname_attribute = 14;
+	string id_attribute = 15;
+	string position_attribute = 16;
+	string login_id_attribute = 17;
+	int64 sync_interval_minutes = 18 [(gogoproto.casttype) = "int"];
+	bool skip_certificate_verification = 19;
+	int64 query_timeout = 20 [(gogoproto.casttype) = "int"];
+	int64 max_page_size = 21 [(gogoproto.casttype) = "int"];
+	string login_field_name = 22;
+	string login_button_color = 23;
+	string login_button_border_color = 24;
+	string login_button_text_color = 25;
+}
+
+message LocalizationSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string default_server_locale = 1;
+	string default_client_locale = 2;
+	string available_locales = 3;
+}
+
+message LogSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_console = 1;
+	string console_level = 2;
+	bool console_json = 3;
+	bool enable_file = 4;
+	string file_level = 5;
+	bool file_json = 6;
+	string file_location = 7;
+	bool enable_webhook_debugging = 8;
+	bool enable_diagnostics = 9;
+}
+
+// The plugin manifest defines the metadata required to load and present your plugin. The manifest
+// file should be named plugin.json or plugin.yaml and placed in the top of your
+// plugin bundle.
+// 
+// Example plugin.yaml:
+// 
+//     id: com.mycompany.myplugin
+//     name: My Plugin
+//     description: This is my plugin. It does stuff.
+//     server:
+//         executable: myplugin
+//     settings_schema:
+//         settings:
+//             - key: enable_extra_thing
+//               type: bool
+//               display_name: Enable Extra Thing
+//               help_text: When true, an extra thing will be enabled!
+//               default: false
+message Manifest {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string name = 2;
+	string description = 3;
+	string version = 4;
+	github.com.mattermost.mattermostserver.model.ManifestServer server = 5;
+	github.com.mattermost.mattermostserver.model.ManifestServer backend = 6;
+	github.com.mattermost.mattermostserver.model.ManifestWebapp webapp = 7;
+	github.com.mattermost.mattermostserver.model.PluginSettingsSchema settings_schema = 8;
+}
+
+message ManifestExecutables {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string linux_amd64 = 1;
+	string darwin_amd64 = 2;
+	string windows_amd64 = 3;
+}
+
+message ManifestServer {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	github.com.mattermost.mattermostserver.model.ManifestExecutables executables = 1;
+	string executable = 2;
+}
+
+message ManifestWebapp {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string bundle_path = 1;
+}
+
+message MessageExportSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_export = 1;
+	string export_format = 2;
+	string daily_run_time = 3;
+	int64 export_from_timestamp = 4;
+	int64 batch_size = 5 [(gogoproto.casttype) = "int"];
+	github.com.mattermost.mattermostserver.model.GlobalRelayMessageExportSettings global_relay_settings = 6;
+}
+
+message MetricsSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	int64 block_profile_rate = 2 [(gogoproto.casttype) = "int"];
+	string listen_address = 3;
+}
+
+message NativeAppSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string app_download_link = 1;
+	string android_app_download_link = 2;
+	string ios_app_download_link = 3;
+}
+
+message PasswordSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 minimum_length = 1 [(gogoproto.casttype) = "int"];
+	bool lowercase = 2;
+	bool number = 3;
+	bool uppercase = 4;
+	bool symbol = 5;
+}
+
+message PluginInfo {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string name = 2;
+	string description = 3;
+	string version = 4;
+	github.com.mattermost.mattermostserver.model.ManifestServer server = 5;
+	github.com.mattermost.mattermostserver.model.ManifestServer backend = 6;
+	github.com.mattermost.mattermostserver.model.ManifestWebapp webapp = 7;
+	github.com.mattermost.mattermostserver.model.PluginSettingsSchema settings_schema = 8;
+}
+
+message PluginOption {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string display_name = 1;
+	string value = 2;
+}
+
+message PluginSetting {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string key = 1;
+	string display_name = 2;
+	string type = 3;
+	string help_text = 4;
+	string regenerate_help_text = 5;
+	string placeholder = 6;
+	repeated github.com.mattermost.mattermostserver.model.PluginOption options = 7;
+}
+
+message PluginSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	bool enable_uploads = 2;
+	string directory = 3;
+	string client_directory = 4;
+	map<string, github.com.mattermost.mattermostserver.model.PluginState> plugin_states = 5;
+}
+
+message PluginSettingsSchema {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string header = 1;
+	string footer = 2;
+	repeated github.com.mattermost.mattermostserver.model.PluginSetting settings = 3;
+}
+
+message PluginState {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+}
+
+message Post {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	int64 create_at = 2;
+	int64 update_at = 3;
+	int64 edit_at = 4;
+	int64 delete_at = 5;
+	bool is_pinned = 6;
+	string user_id = 7;
+	string channel_id = 8;
+	string root_id = 9;
+	string parent_id = 10;
+	string original_id = 11;
+	string message = 12;
+	string message_source = 13;
+	string type = 14;
+	string hashtags = 15;
+	repeated string filenames = 16;
+	repeated string file_ids = 17;
+	string pending_post_id = 18;
+	bool has_reactions = 19;
+}
+
+message PostAction {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string name = 2;
+	github.com.mattermost.mattermostserver.model.PostActionIntegration integration = 3;
+}
+
+message PostActionIntegration {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string url = 1 [(gogoproto.customname) = "URL"];
+}
+
+message Preference {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string user_id = 1;
+	string category = 2;
+	string name = 3;
+	string value = 4;
+}
+
+message PrivacySettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool show_email_address = 1;
+	bool show_full_name = 2;
+}
+
+message RateLimitSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	int64 per_sec = 2 [(gogoproto.casttype) = "int"];
+	int64 max_burst = 3 [(gogoproto.casttype) = "int"];
+	int64 memory_store_size = 4 [(gogoproto.casttype) = "int"];
+	bool vary_by_remote_addr = 5;
+	bool vary_by_user = 6;
+	string vary_by_header = 7;
+}
+
+message Role {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string name = 2;
+	string display_name = 3;
+	string description = 4;
+	int64 create_at = 5;
+	int64 update_at = 6;
+	int64 delete_at = 7;
+	repeated string permissions = 8;
+	bool scheme_managed = 9;
+	bool built_in = 10;
+}
+
+message SSOSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	string secret = 2;
+	string id = 3;
+	string scope = 4;
+	string auth_endpoint = 5;
+	string token_endpoint = 6;
+	string user_api_endpoint = 7;
+}
+
+message SamlSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	bool enable_sync_with_ldap = 2;
+	bool verify = 3;
+	bool encrypt = 4;
+	string idp_url = 5;
+	string idp_descriptor_url = 6;
+	string assertion_consumer_service_url = 7 [(gogoproto.customname) = "AssertionConsumerServiceURL"];
+	string scoping_idpprovider_id = 8 [(gogoproto.customname) = "ScopingIDPProviderId"];
+	string scoping_idpname = 9 [(gogoproto.customname) = "ScopingIDPName"];
+	string idp_certificate_file = 10;
+	string public_certificate_file = 11;
+	string private_key_file = 12;
+	string first_name_attribute = 13;
+	string last_name_attribute = 14;
+	string email_attribute = 15;
+	string username_attribute = 16;
+	string nickname_attribute = 17;
+	string locale_attribute = 18;
+	string position_attribute = 19;
+	string login_button_text = 20;
+	string login_button_color = 21;
+	string login_button_border_color = 22;
+	string login_button_text_color = 23;
+}
+
+message ServiceSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string site_url = 1 [(gogoproto.customname) = "SiteURL"];
+	string websocket_url = 2 [(gogoproto.customname) = "WebsocketURL"];
+	string license_file_location = 3;
+	string listen_address = 4;
+	string connection_security = 5;
+	string tlscert_file = 6 [(gogoproto.customname) = "TLSCertFile"];
+	string tlskey_file = 7 [(gogoproto.customname) = "TLSKeyFile"];
+	bool use_lets_encrypt = 8;
+	string lets_encrypt_certificate_cache_file = 9;
+	bool forward80_to443 = 10;
+	int64 read_timeout = 11 [(gogoproto.casttype) = "int"];
+	int64 write_timeout = 12 [(gogoproto.casttype) = "int"];
+	int64 maximum_login_attempts = 13 [(gogoproto.casttype) = "int"];
+	int64 goroutine_health_threshold = 14 [(gogoproto.casttype) = "int"];
+	string google_developer_key = 15;
+	bool enable_oauth_service_provider = 16 [(gogoproto.customname) = "EnableOAuthServiceProvider"];
+	bool enable_incoming_webhooks = 17;
+	bool enable_outgoing_webhooks = 18;
+	bool enable_commands = 19;
+	bool enable_only_admin_integrations = 20;
+	bool enable_post_username_override = 21;
+	bool enable_post_icon_override = 22;
+	bool enable_link_previews = 23;
+	bool enable_testing = 24;
+	bool enable_developer = 25;
+	bool enable_security_fix_alert = 26;
+	bool enable_insecure_outgoing_connections = 27;
+	string allowed_untrusted_internal_connections = 28;
+	bool enable_multifactor_authentication = 29;
+	bool enforce_multifactor_authentication = 30;
+	bool enable_user_access_tokens = 31;
+	string allow_cors_from = 32;
+	bool allow_cookies_for_subdomains = 33;
+	int64 session_length_web_in_days = 34 [(gogoproto.casttype) = "int"];
+	int64 session_length_mobile_in_days = 35 [(gogoproto.casttype) = "int"];
+	int64 session_length_ssoin_days = 36 [(gogoproto.casttype) = "int", (gogoproto.customname) = "SessionLengthSSOInDays"];
+	int64 session_cache_in_minutes = 37 [(gogoproto.casttype) = "int"];
+	int64 session_idle_timeout_in_minutes = 38 [(gogoproto.casttype) = "int"];
+	int64 websocket_secure_port = 39 [(gogoproto.casttype) = "int"];
+	int64 websocket_port = 40 [(gogoproto.casttype) = "int"];
+	string webserver_mode = 41;
+	bool enable_custom_emoji = 42;
+	bool enable_emoji_picker = 43;
+	bool enable_gif_picker = 44;
+	string gfycat_api_key = 45;
+	string gfycat_api_secret = 46;
+	string restrict_custom_emoji_creation = 47;
+	string restrict_post_delete = 48;
+	string allow_edit_post = 49;
+	int64 post_edit_time_limit = 50 [(gogoproto.casttype) = "int"];
+	int64 time_between_user_typing_updates_milliseconds = 51;
+	bool enable_post_search = 52;
+	bool enable_user_typing_messages = 53;
+	bool enable_channel_viewed_messages = 54;
+	bool enable_user_statuses = 55;
+	bool experimental_enable_authentication_transfer = 56;
+	int64 cluster_log_timeout_milliseconds = 57 [(gogoproto.casttype) = "int"];
+	bool close_unused_direct_messages = 58;
+	bool enable_preview_features = 59;
+	bool enable_tutorial = 60;
+	bool experimental_enable_default_channel_leave_join_messages = 61;
+	string experimental_group_unread_channels = 62;
+	string image_proxy_type = 63;
+	string image_proxy_url = 64 [(gogoproto.customname) = "ImageProxyURL"];
+	string image_proxy_options = 65;
+	bool enable_apiteam_deletion = 66 [(gogoproto.customname) = "EnableAPITeamDeletion"];
+	bool experimental_enable_hardened_mode = 67;
+	bool experimental_limit_client_config = 68;
+	bool enable_email_invitations = 69;
+}
+
+message Session {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	string token = 2;
+	int64 create_at = 3;
+	int64 expires_at = 4;
+	int64 last_activity_at = 5;
+	string user_id = 6;
+	string device_id = 7;
+	string roles = 8;
+	bool is_oauth = 9 [(gogoproto.customname) = "IsOAuth"];
+	map<string, string> props = 10 [(gogoproto.casttype) = "StringMap"];
+	repeated github.com.mattermost.mattermostserver.model.TeamMember team_members = 11;
+}
+
+message SlackAttachment {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	int64 id = 1;
+	string fallback = 2;
+	string color = 3;
+	string pretext = 4;
+	string author_name = 5;
+	string author_link = 6;
+	string author_icon = 7;
+	string title = 8;
+	string title_link = 9;
+	string text = 10;
+	repeated github.com.mattermost.mattermostserver.model.SlackAttachmentField fields = 11;
+	string image_url = 12 [(gogoproto.customname) = "ImageURL"];
+	string thumb_url = 13 [(gogoproto.customname) = "ThumbURL"];
+	string footer = 14;
+	string footer_icon = 15;
+	repeated github.com.mattermost.mattermostserver.model.PostAction actions = 16;
+}
+
+message SlackAttachmentField {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string title = 1;
+	bool short = 2;
+}
+
+message SqlSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string driver_name = 1;
+	string data_source = 2;
+	repeated string data_source_replicas = 3;
+	repeated string data_source_search_replicas = 4;
+	int64 max_idle_conns = 5 [(gogoproto.casttype) = "int"];
+	int64 conn_max_lifetime_milliseconds = 6 [(gogoproto.casttype) = "int"];
+	int64 max_open_conns = 7 [(gogoproto.casttype) = "int"];
+	bool trace = 8;
+	string at_rest_encrypt_key = 9;
+	int64 query_timeout = 10 [(gogoproto.casttype) = "int"];
+}
+
+message Status {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string user_id = 1;
+	string status = 2;
+	bool manual = 3;
+	int64 last_activity_at = 4;
+	string active_channel = 5;
+}
+
+message SupportSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string terms_of_service_link = 1;
+	string privacy_policy_link = 2;
+	string about_link = 3;
+	string help_link = 4;
+	string report_aproblem_link = 5 [(gogoproto.customname) = "ReportAProblemLink"];
+	string support_email = 6;
+}
+
+message SystemECDSAKey {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string curve = 1;
+}
+
+message Team {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	int64 create_at = 2;
+	int64 update_at = 3;
+	int64 delete_at = 4;
+	string display_name = 5;
+	string name = 6;
+	string description = 7;
+	string email = 8;
+	string type = 9;
+	string company_name = 10;
+	string allowed_domains = 11;
+	string invite_id = 12;
+	bool allow_open_invite = 13;
+	int64 last_team_icon_update = 14;
+	string scheme_id = 15;
+}
+
+message TeamMember {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string team_id = 1;
+	string user_id = 2;
+	string roles = 3;
+	int64 delete_at = 4;
+	bool scheme_user = 5;
+	bool scheme_admin = 6;
+	string explicit_roles = 7;
+}
+
+message TeamSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string site_name = 1;
+	int64 max_users_per_team = 2 [(gogoproto.casttype) = "int"];
+	bool enable_team_creation = 3;
+	bool enable_user_creation = 4;
+	bool enable_open_server = 5;
+	bool enable_user_deactivation = 6;
+	string restrict_creation_to_domains = 7;
+	bool enable_custom_brand = 8;
+	string custom_brand_text = 9;
+	string custom_description_text = 10;
+	string restrict_direct_message = 11;
+	string restrict_team_invite = 12;
+	string restrict_public_channel_management = 13;
+	string restrict_private_channel_management = 14;
+	string restrict_public_channel_creation = 15;
+	string restrict_private_channel_creation = 16;
+	string restrict_public_channel_deletion = 17;
+	string restrict_private_channel_deletion = 18;
+	string restrict_private_channel_manage_members = 19;
+	bool enable_xto_leave_channels_from_lhs = 20 [(gogoproto.customname) = "EnableXToLeaveChannelsFromLHS"];
+	int64 user_status_away_timeout = 21;
+	int64 max_channels_per_team = 22;
+	int64 max_notifications_per_channel = 23;
+	bool enable_confirm_notifications_to_channel = 24;
+	string teammate_name_display = 25;
+	bool experimental_enable_automatic_replies = 26;
+	bool experimental_hide_town_squarein_lhs = 27 [(gogoproto.customname) = "ExperimentalHideTownSquareinLHS"];
+	bool experimental_town_square_is_read_only = 28;
+	string experimental_primary_team = 29;
+}
+
+message ThemeSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable_theme_selection = 1;
+	string default_theme = 2;
+	bool allow_custom_themes = 3;
+	repeated string allowed_themes = 4;
+}
+
+message TimezoneSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string supported_timezones_path = 1;
+}
+
+message User {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	string id = 1;
+	int64 create_at = 2;
+	int64 update_at = 3;
+	int64 delete_at = 4;
+	string username = 5;
+	string password = 6;
+	string auth_data = 7;
+	string auth_service = 8;
+	string email = 9;
+	bool email_verified = 10;
+	string nickname = 11;
+	string first_name = 12;
+	string last_name = 13;
+	string position = 14;
+	string roles = 15;
+	bool allow_marketing = 16;
+	map<string, string> props = 17 [(gogoproto.casttype) = "StringMap"];
+	map<string, string> notify_props = 18 [(gogoproto.casttype) = "StringMap"];
+	int64 last_password_update = 19;
+	int64 last_picture_update = 20;
+	int64 failed_attempts = 21 [(gogoproto.casttype) = "int"];
+	string locale = 22;
+	map<string, string> timezone = 23 [(gogoproto.casttype) = "StringMap"];
+	bool mfa_active = 24;
+	string mfa_secret = 25;
+	int64 last_activity_at = 26;
+}
+
+message WebrtcSettings {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	bool enable = 1;
+	string gateway_websocket_url = 2;
+	string gateway_admin_url = 3;
+	string gateway_admin_secret = 4;
+	string stun_uri = 5 [(gogoproto.customname) = "StunURI"];
+	string turn_uri = 6 [(gogoproto.customname) = "TurnURI"];
+	string turn_username = 7;
+	string turn_shared_key = 8;
+}
+
+message WebsocketBroadcast {
+	option (gogoproto.goproto_getters) = false;
+	option (gogoproto.typedecl) = false;
+	map<string, bool> omit_users = 1;
+	string user_id = 2;
+	string channel_id = 3;
+	string team_id = 4;
+	bool contains_sanitized_data = 5;
+	bool contains_sensitive_data = 6;
+}
+
+message Scheduler_EnabledResponse {
+	bool result1 = 1;
+}
+
+message Scheduler_JobTypeRequest {
+}
+
+message Scheduler_JobTypeResponse {
+	string result1 = 1;
+}
+
+message Scheduler_NameRequest {
+}
+
+message Scheduler_NameResponse {
+	string result1 = 1;
+}
+
+message Scheduler_NextScheduleTimeRequest {
+	github.com.mattermost.mattermostserver.model.Config arg1 = 1;
+	google.protobuf.Timestamp arg2 = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+	bool arg3 = 3;
+	github.com.mattermost.mattermostserver.model.Job arg4 = 4;
+}
+
+message Scheduler_ScheduleJobRequest {
+	github.com.mattermost.mattermostserver.model.Config arg1 = 1;
+	bool arg2 = 2;
+	github.com.mattermost.mattermostserver.model.Job arg3 = 3;
+}
+
+message Scheduler_ScheduleJobResponse {
+	github.com.mattermost.mattermostserver.model.Job result1 = 1;
+	github.com.mattermost.mattermostserver.model.AppError result2 = 2;
+}
+
+message WebSocketMessage_EventTypeRequest {
+}
+
+message WebSocketMessage_EventTypeResponse {
+	string result1 = 1;
+}
+
+message WebSocketMessage_IsValidRequest {
+}
+
+message WebSocketMessage_IsValidResponse {
+	bool result1 = 1;
+}
+
+message WebSocketMessage_ToJsonRequest {
+}
+
+message WebSocketMessage_ToJsonResponse {
+	string result1 = 1;
+}
+
+message Worker_RunRequest {
+}
+
+message Worker_RunResponse {
+}
+
+message Worker_StopRequest {
+}
+
+message Worker_StopResponse {
+}
+
+service Scheduler {
+	rpc Scheduler_Enabled (github.com.mattermost.mattermostserver.model.Config) returns (github.com.mattermost.mattermostserver.model.Scheduler_EnabledResponse);
+	rpc Scheduler_JobType (github.com.mattermost.mattermostserver.model.Scheduler_JobTypeRequest) returns (github.com.mattermost.mattermostserver.model.Scheduler_JobTypeResponse);
+	rpc Scheduler_Name (github.com.mattermost.mattermostserver.model.Scheduler_NameRequest) returns (github.com.mattermost.mattermostserver.model.Scheduler_NameResponse);
+	rpc Scheduler_NextScheduleTime (github.com.mattermost.mattermostserver.model.Scheduler_NextScheduleTimeRequest) returns (google.protobuf.Timestamp);
+	rpc Scheduler_ScheduleJob (github.com.mattermost.mattermostserver.model.Scheduler_ScheduleJobRequest) returns (github.com.mattermost.mattermostserver.model.Scheduler_ScheduleJobResponse);
+}
+
+service WebSocketMessage {
+	rpc WebSocketMessage_EventType (github.com.mattermost.mattermostserver.model.WebSocketMessage_EventTypeRequest) returns (github.com.mattermost.mattermostserver.model.WebSocketMessage_EventTypeResponse);
+	rpc WebSocketMessage_IsValid (github.com.mattermost.mattermostserver.model.WebSocketMessage_IsValidRequest) returns (github.com.mattermost.mattermostserver.model.WebSocketMessage_IsValidResponse);
+	rpc WebSocketMessage_ToJson (github.com.mattermost.mattermostserver.model.WebSocketMessage_ToJsonRequest) returns (github.com.mattermost.mattermostserver.model.WebSocketMessage_ToJsonResponse);
+}
+
+service Worker {
+	rpc Worker_Run (github.com.mattermost.mattermostserver.model.Worker_RunRequest) returns (github.com.mattermost.mattermostserver.model.Worker_RunResponse);
+	rpc Worker_Stop (github.com.mattermost.mattermostserver.model.Worker_StopRequest) returns (github.com.mattermost.mattermostserver.model.Worker_StopResponse);
+}
+

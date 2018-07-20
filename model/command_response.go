@@ -23,7 +23,7 @@ type CommandResponse struct {
 	Username     string             `json:"username"`
 	IconURL      string             `json:"icon_url"`
 	Type         string             `json:"type"`
-	Props        StringInterface    `json:"props"`
+	Props        StringInterface    `json:"props" proteus:"-"`
 	GotoLocation string             `json:"goto_location"`
 	Attachments  []*SlackAttachment `json:"attachments"`
 }

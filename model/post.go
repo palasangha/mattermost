@@ -73,7 +73,7 @@ type Post struct {
 	MessageSource string `json:"message_source,omitempty" db:"-"`
 
 	Type          string          `json:"type"`
-	Props         StringInterface `json:"props"`
+	Props         StringInterface `json:"props" proteus:"-"`
 	Hashtags      string          `json:"hashtags"`
 	Filenames     StringArray     `json:"filenames,omitempty"` // Deprecated, do not use this field any more
 	FileIds       StringArray     `json:"file_ids,omitempty"`
@@ -116,7 +116,7 @@ type PostAction struct {
 
 type PostActionIntegration struct {
 	URL     string          `json:"url,omitempty"`
-	Context StringInterface `json:"context,omitempty"`
+	Context StringInterface `json:"context,omitempty" proteus:"-"`
 }
 
 type PostActionIntegrationRequest struct {

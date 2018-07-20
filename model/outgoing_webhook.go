@@ -49,7 +49,7 @@ type OutgoingWebhookResponse struct {
 	Text         *string            `json:"text"`
 	Username     string             `json:"username"`
 	IconURL      string             `json:"icon_url"`
-	Props        StringInterface    `json:"props"`
+	Props        StringInterface    `json:"props" proteus:"-"`
 	Attachments  []*SlackAttachment `json:"attachments"`
 	Type         string             `json:"type"`
 	ResponseType string             `json:"response_type"`
