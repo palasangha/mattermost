@@ -6,13 +6,16 @@
 package plugin
 
 import (
-	"encoding/gob"
+	"context"
 	"net/rpc"
 
 	"github.com/hashicorp/go-plugin"
+	"github.com/hashicorp/go-plugin/examples/grpc/proto"
 	"github.com/mattermost/mattermost-server/mlog"
-	"github.com/mattermost/mattermost-server/model"
+	"google.golang.org/grpc"
 )
+
+var hookNameToId map[string]int = make(map[string]int)
 
 // Implements hashicorp/go-plugin/plugin.Plugin interface to connect the hooks of a plugin
 type hooksPlugin struct {
@@ -29,10 +32,13 @@ func (p *hooksPlugin) Client(b *plugin.MuxBroker, client *rpc.Client) (interface
 	return &hooksRPCClient{client: client, log: p.log, muxBroker: b, apiImpl: p.apiImpl}, nil
 }
 
-func init() {
-	gob.Register([]*model.SlackAttachment{})
-	gob.Register([]interface{}{})
-	gob.Register(map[string]interface{}{})
+func (p *hooksPlugin) GRPCServer(broker *plugin.GRPCBroker, s *grpc.Server) error {
+	proto.RegisterKVServer(s, &GRPCServer{Impl: p.Impl})
+	return nil
+}
+
+func (p *hooksPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, c *grpc.ClientConn) (interface{}, error) {
+	return &GRPCClient{client: proto.NewKVClient(c)}, nil
 }
 
 // These enforce compile time checks to make sure types implement the interface
@@ -40,3 +46,7 @@ func init() {
 // autogenerate RPC glue code
 var _ plugin.Plugin = &hooksPlugin{}
 var _ Hooks = &hooksRPCClient{}
+
+func init() {
+	hookNameToId["ServeHTTP"] = ServeHTTPId
+}

@@ -1,0 +1,539 @@
+syntax = "proto3";
+package mmproto;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/mattermost/mattermost-server/mmproto/model.proto";
+
+option (gogoproto.protosizer_all) = true;
+option (gogoproto.sizer_all) = false;
+option go_package = "mmproto";
+
+// Context passes through metadata about the request or hook event.
+// 
+// It is currently a placeholder while the implementation details are sorted out.
+message Context {
+	option (gogoproto.goproto_getters) = false;
+}
+
+message API_AddChannelMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_AddChannelMemberResponse {
+	mmproto.ChannelMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreateChannelResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreatePostResponse {
+	mmproto.Post result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreateTeamResponse {
+	mmproto.Team result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreateTeamMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_CreateTeamMemberResponse {
+	mmproto.TeamMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreateTeamMembersRequest {
+	string arg1 = 1;
+	repeated string arg2 = 2;
+	string arg3 = 3;
+}
+
+message API_CreateTeamMembersResponse {
+	repeated mmproto.TeamMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_CreateUserResponse {
+	mmproto.User result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_DeleteChannelRequest {
+	string arg1 = 1;
+}
+
+message API_DeleteChannelMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_DeletePostRequest {
+	string arg1 = 1;
+}
+
+message API_DeleteTeamRequest {
+	string arg1 = 1;
+}
+
+message API_DeleteTeamMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+	string arg3 = 3;
+}
+
+message API_DeleteUserRequest {
+	string arg1 = 1;
+}
+
+message API_GetChannelRequest {
+	string arg1 = 1;
+}
+
+message API_GetChannelResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetChannelByNameRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_GetChannelByNameResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetChannelMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_GetChannelMemberResponse {
+	mmproto.ChannelMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetConfigRequest {
+}
+
+message API_GetDirectChannelRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_GetDirectChannelResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetGroupChannelRequest {
+	repeated string arg1 = 1;
+}
+
+message API_GetGroupChannelResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetPostRequest {
+	string arg1 = 1;
+}
+
+message API_GetPostResponse {
+	mmproto.Post result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetPublicChannelsForTeamRequest {
+	string arg1 = 1;
+	int64 arg2 = 2 [(gogoproto.casttype) = "int"];
+	int64 arg3 = 3 [(gogoproto.casttype) = "int"];
+}
+
+message API_GetPublicChannelsForTeamResponse {
+	repeated mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetTeamRequest {
+	string arg1 = 1;
+}
+
+message API_GetTeamResponse {
+	mmproto.Team result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetTeamByNameRequest {
+	string arg1 = 1;
+}
+
+message API_GetTeamByNameResponse {
+	mmproto.Team result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetTeamMemberRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_GetTeamMemberResponse {
+	mmproto.TeamMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetTeamMembersRequest {
+	string arg1 = 1;
+	int64 arg2 = 2 [(gogoproto.casttype) = "int"];
+	int64 arg3 = 3 [(gogoproto.casttype) = "int"];
+}
+
+message API_GetTeamMembersResponse {
+	repeated mmproto.TeamMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetTeamsRequest {
+}
+
+message API_GetTeamsResponse {
+	repeated mmproto.Team result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetUserRequest {
+	string arg1 = 1;
+}
+
+message API_GetUserResponse {
+	mmproto.User result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetUserByEmailRequest {
+	string arg1 = 1;
+}
+
+message API_GetUserByEmailResponse {
+	mmproto.User result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetUserByUsernameRequest {
+	string arg1 = 1;
+}
+
+message API_GetUserByUsernameResponse {
+	mmproto.User result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetUserStatusRequest {
+	string arg1 = 1;
+}
+
+message API_GetUserStatusResponse {
+	mmproto.Status result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_GetUserStatusesByIdsRequest {
+	repeated string arg1 = 1;
+}
+
+message API_GetUserStatusesByIdsResponse {
+	repeated mmproto.Status result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_KVDeleteRequest {
+	string arg1 = 1;
+}
+
+message API_KVGetRequest {
+	string arg1 = 1;
+}
+
+message API_KVGetResponse {
+	bytes result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_KVSetRequest {
+	string arg1 = 1;
+	bytes arg2 = 2;
+}
+
+message API_RegisterCommandResponse {
+}
+
+message API_SendEphemeralPostRequest {
+	string arg1 = 1;
+	mmproto.Post arg2 = 2;
+}
+
+message API_UnregisterCommandRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_UnregisterCommandResponse {
+}
+
+message API_UpdateChannelResponse {
+	mmproto.Channel result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateChannelMemberNotificationsRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+	map<string, string> arg3 = 3;
+}
+
+message API_UpdateChannelMemberNotificationsResponse {
+	mmproto.ChannelMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateChannelMemberRolesRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+	string arg3 = 3;
+}
+
+message API_UpdateChannelMemberRolesResponse {
+	mmproto.ChannelMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdatePostResponse {
+	mmproto.Post result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateTeamResponse {
+	mmproto.Team result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateTeamMemberRolesRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+	string arg3 = 3;
+}
+
+message API_UpdateTeamMemberRolesResponse {
+	mmproto.TeamMember result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateUserResponse {
+	mmproto.User result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message API_UpdateUserStatusRequest {
+	string arg1 = 1;
+	string arg2 = 2;
+}
+
+message API_UpdateUserStatusResponse {
+	mmproto.Status result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message Hooks_ChannelHasBeenCreatedRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.Channel arg2 = 2;
+}
+
+message Hooks_ChannelHasBeenCreatedResponse {
+}
+
+message Hooks_ExecuteCommandRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.CommandArgs arg2 = 2;
+}
+
+message Hooks_ExecuteCommandResponse {
+	mmproto.CommandResponse result1 = 1;
+	mmproto.AppError result2 = 2;
+}
+
+message Hooks_ImplementedRequest {
+}
+
+message Hooks_ImplementedResponse {
+	repeated string result1 = 1;
+}
+
+message Hooks_MessageHasBeenPostedRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.Post arg2 = 2;
+}
+
+message Hooks_MessageHasBeenPostedResponse {
+}
+
+message Hooks_MessageHasBeenUpdatedRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.Post arg2 = 2;
+	mmproto.Post arg3 = 3;
+}
+
+message Hooks_MessageHasBeenUpdatedResponse {
+}
+
+message Hooks_MessageWillBePostedRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.Post arg2 = 2;
+}
+
+message Hooks_MessageWillBePostedResponse {
+	mmproto.Post result1 = 1;
+	string result2 = 2;
+}
+
+message Hooks_MessageWillBeUpdatedRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.Post arg2 = 2;
+	mmproto.Post arg3 = 3;
+}
+
+message Hooks_MessageWillBeUpdatedResponse {
+	mmproto.Post result1 = 1;
+	string result2 = 2;
+}
+
+message Hooks_OnActivateRequest {
+	uint32 arg1 = 1;
+}
+
+message Hooks_OnActivateResponse {
+}
+
+message Hooks_OnConfigurationChangeRequest {
+}
+
+message Hooks_OnConfigurationChangeResponse {
+}
+
+message Hooks_OnDeactivateRequest {
+}
+
+message Hooks_OnDeactivateResponse {
+}
+
+message Hooks_UserHasJoinedChannelRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.ChannelMember arg2 = 2;
+	mmproto.User arg3 = 3;
+}
+
+message Hooks_UserHasJoinedChannelResponse {
+}
+
+message Hooks_UserHasJoinedTeamRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.TeamMember arg2 = 2;
+	mmproto.User arg3 = 3;
+}
+
+message Hooks_UserHasJoinedTeamResponse {
+}
+
+message Hooks_UserHasLeftChannelRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.ChannelMember arg2 = 2;
+	mmproto.User arg3 = 3;
+}
+
+message Hooks_UserHasLeftChannelResponse {
+}
+
+message Hooks_UserHasLeftTeamRequest {
+	mmproto.Context arg1 = 1;
+	mmproto.TeamMember arg2 = 2;
+	mmproto.User arg3 = 3;
+}
+
+message Hooks_UserHasLeftTeamResponse {
+}
+
+service API {
+	rpc API_AddChannelMember (mmproto.API_AddChannelMemberRequest) returns (mmproto.API_AddChannelMemberResponse);
+	rpc API_CreateChannel (mmproto.Channel) returns (mmproto.API_CreateChannelResponse);
+	rpc API_CreatePost (mmproto.Post) returns (mmproto.API_CreatePostResponse);
+	rpc API_CreateTeam (mmproto.Team) returns (mmproto.API_CreateTeamResponse);
+	rpc API_CreateTeamMember (mmproto.API_CreateTeamMemberRequest) returns (mmproto.API_CreateTeamMemberResponse);
+	rpc API_CreateTeamMembers (mmproto.API_CreateTeamMembersRequest) returns (mmproto.API_CreateTeamMembersResponse);
+	rpc API_CreateUser (mmproto.User) returns (mmproto.API_CreateUserResponse);
+	rpc API_DeleteChannel (mmproto.API_DeleteChannelRequest) returns (mmproto.AppError);
+	rpc API_DeleteChannelMember (mmproto.API_DeleteChannelMemberRequest) returns (mmproto.AppError);
+	rpc API_DeletePost (mmproto.API_DeletePostRequest) returns (mmproto.AppError);
+	rpc API_DeleteTeam (mmproto.API_DeleteTeamRequest) returns (mmproto.AppError);
+	rpc API_DeleteTeamMember (mmproto.API_DeleteTeamMemberRequest) returns (mmproto.AppError);
+	rpc API_DeleteUser (mmproto.API_DeleteUserRequest) returns (mmproto.AppError);
+	rpc API_GetChannel (mmproto.API_GetChannelRequest) returns (mmproto.API_GetChannelResponse);
+	rpc API_GetChannelByName (mmproto.API_GetChannelByNameRequest) returns (mmproto.API_GetChannelByNameResponse);
+	rpc API_GetChannelMember (mmproto.API_GetChannelMemberRequest) returns (mmproto.API_GetChannelMemberResponse);
+	rpc API_GetConfig (mmproto.API_GetConfigRequest) returns (mmproto.Config);
+	rpc API_GetDirectChannel (mmproto.API_GetDirectChannelRequest) returns (mmproto.API_GetDirectChannelResponse);
+	rpc API_GetGroupChannel (mmproto.API_GetGroupChannelRequest) returns (mmproto.API_GetGroupChannelResponse);
+	rpc API_GetPost (mmproto.API_GetPostRequest) returns (mmproto.API_GetPostResponse);
+	rpc API_GetPublicChannelsForTeam (mmproto.API_GetPublicChannelsForTeamRequest) returns (mmproto.API_GetPublicChannelsForTeamResponse);
+	rpc API_GetTeam (mmproto.API_GetTeamRequest) returns (mmproto.API_GetTeamResponse);
+	rpc API_GetTeamByName (mmproto.API_GetTeamByNameRequest) returns (mmproto.API_GetTeamByNameResponse);
+	rpc API_GetTeamMember (mmproto.API_GetTeamMemberRequest) returns (mmproto.API_GetTeamMemberResponse);
+	rpc API_GetTeamMembers (mmproto.API_GetTeamMembersRequest) returns (mmproto.API_GetTeamMembersResponse);
+	rpc API_GetTeams (mmproto.API_GetTeamsRequest) returns (mmproto.API_GetTeamsResponse);
+	rpc API_GetUser (mmproto.API_GetUserRequest) returns (mmproto.API_GetUserResponse);
+	rpc API_GetUserByEmail (mmproto.API_GetUserByEmailRequest) returns (mmproto.API_GetUserByEmailResponse);
+	rpc API_GetUserByUsername (mmproto.API_GetUserByUsernameRequest) returns (mmproto.API_GetUserByUsernameResponse);
+	rpc API_GetUserStatus (mmproto.API_GetUserStatusRequest) returns (mmproto.API_GetUserStatusResponse);
+	rpc API_GetUserStatusesByIds (mmproto.API_GetUserStatusesByIdsRequest) returns (mmproto.API_GetUserStatusesByIdsResponse);
+	rpc API_KVDelete (mmproto.API_KVDeleteRequest) returns (mmproto.AppError);
+	rpc API_KVGet (mmproto.API_KVGetRequest) returns (mmproto.API_KVGetResponse);
+	rpc API_KVSet (mmproto.API_KVSetRequest) returns (mmproto.AppError);
+	rpc API_RegisterCommand (mmproto.Command) returns (mmproto.API_RegisterCommandResponse);
+	rpc API_SaveConfig (mmproto.Config) returns (mmproto.AppError);
+	rpc API_SendEphemeralPost (mmproto.API_SendEphemeralPostRequest) returns (mmproto.Post);
+	rpc API_UnregisterCommand (mmproto.API_UnregisterCommandRequest) returns (mmproto.API_UnregisterCommandResponse);
+	rpc API_UpdateChannel (mmproto.Channel) returns (mmproto.API_UpdateChannelResponse);
+	rpc API_UpdateChannelMemberNotifications (mmproto.API_UpdateChannelMemberNotificationsRequest) returns (mmproto.API_UpdateChannelMemberNotificationsResponse);
+	rpc API_UpdateChannelMemberRoles (mmproto.API_UpdateChannelMemberRolesRequest) returns (mmproto.API_UpdateChannelMemberRolesResponse);
+	rpc API_UpdatePost (mmproto.Post) returns (mmproto.API_UpdatePostResponse);
+	rpc API_UpdateTeam (mmproto.Team) returns (mmproto.API_UpdateTeamResponse);
+	rpc API_UpdateTeamMemberRoles (mmproto.API_UpdateTeamMemberRolesRequest) returns (mmproto.API_UpdateTeamMemberRolesResponse);
+	rpc API_UpdateUser (mmproto.User) returns (mmproto.API_UpdateUserResponse);
+	rpc API_UpdateUserStatus (mmproto.API_UpdateUserStatusRequest) returns (mmproto.API_UpdateUserStatusResponse);
+}
+
+service Hooks {
+	rpc Hooks_ChannelHasBeenCreated (mmproto.Hooks_ChannelHasBeenCreatedRequest) returns (mmproto.Hooks_ChannelHasBeenCreatedResponse);
+	rpc Hooks_ExecuteCommand (mmproto.Hooks_ExecuteCommandRequest) returns (mmproto.Hooks_ExecuteCommandResponse);
+	rpc Hooks_Implemented (mmproto.Hooks_ImplementedRequest) returns (mmproto.Hooks_ImplementedResponse);
+	rpc Hooks_MessageHasBeenPosted (mmproto.Hooks_MessageHasBeenPostedRequest) returns (mmproto.Hooks_MessageHasBeenPostedResponse);
+	rpc Hooks_MessageHasBeenUpdated (mmproto.Hooks_MessageHasBeenUpdatedRequest) returns (mmproto.Hooks_MessageHasBeenUpdatedResponse);
+	rpc Hooks_MessageWillBePosted (mmproto.Hooks_MessageWillBePostedRequest) returns (mmproto.Hooks_MessageWillBePostedResponse);
+	rpc Hooks_MessageWillBeUpdated (mmproto.Hooks_MessageWillBeUpdatedRequest) returns (mmproto.Hooks_MessageWillBeUpdatedResponse);
+	rpc Hooks_OnActivate (mmproto.Hooks_OnActivateRequest) returns (mmproto.Hooks_OnActivateResponse);
+	rpc Hooks_OnConfigurationChange (mmproto.Hooks_OnConfigurationChangeRequest) returns (mmproto.Hooks_OnConfigurationChangeResponse);
+	rpc Hooks_OnDeactivate (mmproto.Hooks_OnDeactivateRequest) returns (mmproto.Hooks_OnDeactivateResponse);
+	rpc Hooks_UserHasJoinedChannel (mmproto.Hooks_UserHasJoinedChannelRequest) returns (mmproto.Hooks_UserHasJoinedChannelResponse);
+	rpc Hooks_UserHasJoinedTeam (mmproto.Hooks_UserHasJoinedTeamRequest) returns (mmproto.Hooks_UserHasJoinedTeamResponse);
+	rpc Hooks_UserHasLeftChannel (mmproto.Hooks_UserHasLeftChannelRequest) returns (mmproto.Hooks_UserHasLeftChannelResponse);
+	rpc Hooks_UserHasLeftTeam (mmproto.Hooks_UserHasLeftTeamRequest) returns (mmproto.Hooks_UserHasLeftTeamResponse);
+}
+

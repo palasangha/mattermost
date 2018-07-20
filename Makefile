@@ -287,12 +287,32 @@ plugin-mocks: ## Creates mock files for plugins.
 	$(GOPATH)/bin/mockery -dir plugin -name API -output plugin/plugintest -outpkg plugintest -case underscore -note 'Regenerate this file using `make plugin-mocks`.'
 	$(GOPATH)/bin/mockery -dir plugin -name Hooks -output plugin/plugintest -outpkg plugintest -case underscore -note 'Regenerate this file using `make plugin-mocks`.'
 
-pluginapi: ## Generates api and hooks glue code for plugins
+pluginapi: ## Generates api and hooks glue code for plugins.
 	go generate ./plugin
 
-proto:
+proto: ## Generates protocol buffer files for model and plugin.
 	# TODO: go get proteus
-	proteus proto -f $(GOPATH)/src/github.com/mattermost/mattermost-server/proto/ -p github.com/mattermost/mattermost-server/plugin -p github.com/mattermost/mattermost-server/model
+	proteus proto -f $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/ -p github.com/mattermost/mattermost-server/plugin -p github.com/mattermost/mattermost-server/model
+
+	sed -i -e 's/github\.com\.mattermost\.mattermostserver\.model/mmproto/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/model/generated.proto
+	sed -i -e 's/option go_package = "model";/option go_package = "mmproto";/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/model/generated.proto
+	sed -i -e 's/github\.com\.mattermost\.mattermostserver\.model/mmproto/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/plugin/generated.proto
+	sed -i -e 's/github\.com\.mattermost\.mattermostserver\.plugin/mmproto/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/plugin/generated.proto
+	sed -i -e 's/option go_package = "plugin";/option go_package = "mmproto";/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/plugin/generated.proto
+	sed -i -e 's/import "github\.com\/mattermost\/mattermost-server\/model\/generated\.proto";/import "github.com\/mattermost\/mattermost-server\/mmproto\/model.proto";/g' $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/plugin/generated.proto
+
+	mv $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/model/generated.proto ./mmproto/model.proto
+	mv $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com/mattermost/mattermost-server/plugin/generated.proto ./mmproto/plugin.proto
+	rm -r $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/github.com
+
+	#protoc --proto_path=$(GOPATH)/src:$(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/:$(GOPATH)/src/github.com/gogo/protobuf/protobuf: $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/plugin.proto --gofast_out=plugins=grpc,Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types:$(GOPATH)/src
+
+	#protoc --proto_path=$(GOPATH)/src:$(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/:$(GOPATH)/src/github.com/gogo/protobuf/protobuf: $(GOPATH)/src/github.com/mattermost/mattermost-server/mmproto/model.proto --gofast_out=plugins=grpc,Mgoogle/protobuf/duration.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types:$(GOPATH)/src
+
+	#echo '//go:generate go run generator/main.go\n\n' | cat - ./mmproto/model.pb.go > temp.go
+	#mv temp.go ./mmproto/model.pb.go
+	#go generate ./mmproto
+	#mv ./mmproto/model_generated.pb.go ./mmproto/model.pb.go
 
 check-licenses: ## Checks license status.
 	./scripts/license-check.sh $(TE_PACKAGES) $(EE_PACKAGES)
