@@ -465,13 +465,13 @@ func UpgradeDatabaseToVersion50(sqlStore SqlStore) {
 
 		sqlStore.RemoveIndexIfExists("idx_channels_txt", "Channels")
 
-		saveSchemaVersion(sqlStore, VERSION_5_0_0)
+		// saveSchemaVersion(sqlStore, VERSION_5_0_0)
 	}
 }
 
 func UpgradeDatabaseToVersion51(sqlStore SqlStore) {
 	if shouldPerformUpgrade(sqlStore, VERSION_5_0_0, VERSION_5_1_0) {
-		saveSchemaVersion(sqlStore, VERSION_5_1_0)
+		// saveSchemaVersion(sqlStore, VERSION_5_1_0)
 	}
 }
 
@@ -479,12 +479,12 @@ func UpgradeDatabaseToVersion52(sqlStore SqlStore) {
 	if shouldPerformUpgrade(sqlStore, VERSION_5_1_0, VERSION_5_2_0) {
 		sqlStore.CreateColumnIfNotExists("OutgoingWebhooks", "Username", "varchar(64)", "varchar(64)", "")
 		sqlStore.CreateColumnIfNotExists("OutgoingWebhooks", "IconURL", "varchar(1024)", "varchar(1024)", "")
-		saveSchemaVersion(sqlStore, VERSION_5_2_0)
+		// saveSchemaVersion(sqlStore, VERSION_5_2_0)
 	}
 }
 
 func UpgradeDatabaseToVersion53(sqlStore SqlStore) {
 	if shouldPerformUpgrade(sqlStore, VERSION_5_2_0, VERSION_5_3_0) {
-		saveSchemaVersion(sqlStore, VERSION_5_3_0)
+		// saveSchemaVersion(sqlStore, VERSION_5_3_0)
 	}
 }
