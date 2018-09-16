@@ -66,7 +66,7 @@ func (a *App) NewWebConn(ws *websocket.Conn, session model.Session, t goi18n.Tra
 
 	wc.SetSession(&session)
 	wc.SetSessionToken(session.Token)
-	wc.SetSessionExpiresAt(session.ExpiresAt)
+	wc.SetSessionExpiresAt(session.ExpiresAt(&a.Config().SessionSettings).UnixNano() / int64(time.Millisecond))
 
 	return wc
 }
@@ -270,7 +270,7 @@ func (webCon *WebConn) IsAuthenticated() bool {
 		}
 
 		webCon.SetSession(session)
-		webCon.SetSessionExpiresAt(session.ExpiresAt)
+		webCon.SetSessionExpiresAt(session.ExpiresAt(&webCon.App.Config().SessionSettings).UnixNano() / int64(time.Millisecond))
 	}
 
 	return true

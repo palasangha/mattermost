@@ -589,6 +589,12 @@ func GenerateClientConfig(c *model.Config, diagnosticId string, license *model.L
 
 	props["EnableEmailInvitations"] = strconv.FormatBool(*c.ServiceSettings.EnableEmailInvitations)
 
+	props["WebRenewalTimeoutMinutes"] = strconv.FormatInt(int64(*c.SessionSettings.WebRenewalTimeoutMinutes), 10)
+	props["WebTimeoutMinutes"] = strconv.FormatInt(int64(*c.SessionSettings.WebTimeoutMinutes), 10)
+
+	props["MobileTimeoutMinutes"] = strconv.FormatInt(int64(*c.SessionSettings.MobileTimeoutMinutes), 10)
+	props["MobileRenewalTimeoutMinutes"] = strconv.FormatInt(int64(*c.SessionSettings.MobileRenewalTimeoutMinutes), 10)
+
 	// Set default values for all options that require a license.
 	props["ExperimentalHideTownSquareinLHS"] = "false"
 	props["ExperimentalTownSquareIsReadOnly"] = "false"

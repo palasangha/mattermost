@@ -119,7 +119,7 @@ func manualTest(c *web.Context, w http.ResponseWriter, r *http.Request) {
 			Name:     model.SESSION_COOKIE_TOKEN,
 			Value:    client.AuthToken,
 			Path:     "/",
-			MaxAge:   *c.App.Config().ServiceSettings.SessionLengthWebInDays * 60 * 60 * 24,
+			MaxAge:   *c.App.Config().SessionSettings.WebTimeoutMinutes * 60,
 			HttpOnly: true,
 		}
 		http.SetCookie(w, sessionCookie)

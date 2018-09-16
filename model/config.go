@@ -211,11 +211,7 @@ type ServiceSettings struct {
 	CorsAllowCredentials                              *bool
 	CorsDebug                                         *bool
 	AllowCookiesForSubdomains                         *bool
-	SessionLengthWebInDays                            *int
-	SessionLengthMobileInDays                         *int
-	SessionLengthSSOInDays                            *int
 	SessionCacheInMinutes                             *int
-	SessionIdleTimeoutInMinutes                       *int
 	WebsocketSecurePort                               *int
 	WebsocketPort                                     *int
 	WebserverMode                                     *string
@@ -378,26 +374,6 @@ func (s *ServiceSettings) SetDefaults() {
 
 	if s.EnableTutorial == nil {
 		s.EnableTutorial = NewBool(true)
-	}
-
-	if s.SessionLengthWebInDays == nil {
-		s.SessionLengthWebInDays = NewInt(30)
-	}
-
-	if s.SessionLengthMobileInDays == nil {
-		s.SessionLengthMobileInDays = NewInt(30)
-	}
-
-	if s.SessionLengthSSOInDays == nil {
-		s.SessionLengthSSOInDays = NewInt(30)
-	}
-
-	if s.SessionCacheInMinutes == nil {
-		s.SessionCacheInMinutes = NewInt(10)
-	}
-
-	if s.SessionIdleTimeoutInMinutes == nil {
-		s.SessionIdleTimeoutInMinutes = NewInt(0)
 	}
 
 	if s.EnableCommands == nil {
@@ -1925,6 +1901,43 @@ func (s *TimezoneSettings) SetDefaults() {
 	}
 }
 
+type SessionSettings struct {
+	WebTimeoutMinutes        *int
+	WebRenewalTimeoutMinutes *int
+	WebIdleTimeoutMinutes    *int
+
+	MobileTimeoutMinutes        *int
+	MobileRenewalTimeoutMinutes *int
+
+	OAuthTimeoutMinutes *int
+}
+
+func (s *SessionSettings) SetDefaults() {
+	if s.WebTimeoutMinutes == nil {
+		s.WebTimeoutMinutes = NewInt(525600)
+	}
+
+	if s.WebRenewalTimeoutMinutes == nil {
+		s.WebRenewalTimeoutMinutes = NewInt(60)
+	}
+
+	if s.WebIdleTimeoutMinutes == nil {
+		s.WebIdleTimeoutMinutes = NewInt(0)
+	}
+
+	if s.MobileTimeoutMinutes == nil {
+		s.MobileTimeoutMinutes = NewInt(525600)
+	}
+
+	if s.MobileRenewalTimeoutMinutes == nil {
+		s.MobileRenewalTimeoutMinutes = NewInt(60)
+	}
+
+	if s.OAuthTimeoutMinutes == nil {
+		s.OAuthTimeoutMinutes = NewInt(43200)
+	}
+}
+
 type ConfigFunc func() *Config
 
 type Config struct {
@@ -1934,6 +1947,7 @@ type Config struct {
 	SqlSettings           SqlSettings
 	LogSettings           LogSettings
 	PasswordSettings      PasswordSettings
+	SessionSettings       SessionSettings
 	FileSettings          FileSettings
 	EmailSettings         EmailSettings
 	ExtensionSettings     ExtensionSettings
@@ -2035,6 +2049,7 @@ func (o *Config) SetDefaults() {
 	o.TimezoneSettings.SetDefaults()
 	o.DisplaySettings.SetDefaults()
 	o.ExtensionSettings.SetDefaults()
+	o.SessionSettings.SetDefaults()
 }
 
 func (o *Config) IsValid() *AppError {

@@ -4,15 +4,15 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/avct/uasurfer"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/mattermost/mattermost-server/store"
+	"github.com/mattermost/mattermost-server/utils"
 )
 
 func (a *App) CheckForClienSideCert(r *http.Request) (string, string, string) {
@@ -128,32 +128,30 @@ func (a *App) GetUserForLogin(id, loginId string) (*model.User, *model.AppError)
 }
 
 func (a *App) DoLogin(w http.ResponseWriter, r *http.Request, user *model.User, deviceId string) (*model.Session, *model.AppError) {
-	session := &model.Session{UserId: user.Id, Roles: user.GetRawRoles(), DeviceId: deviceId, IsOAuth: false}
+	sessionCreationTime := time.Now()
+	sessionCreationTimeMilliseconds := utils.MillisFromTime(sessionCreationTime)
+	session := &model.Session{
+		UserId:   user.Id,
+		Roles:    user.GetRawRoles(),
+		DeviceId: deviceId,
+		IsOAuth:  false,
+		CreateAt: sessionCreationTimeMilliseconds,
+	}
 	session.GenerateCSRF()
-	maxAge := *a.Config().ServiceSettings.SessionLengthWebInDays * 60 * 60 * 24
+	if r.Header.Get(model.HEADER_USE_REFRESH) == "true" {
+		session.AddProp(model.SESSION_PROP_IS_REFRESHABLE_KEY, model.SESSION_PROP_IS_REFRESHABLE_VALUE)
+		session.AddProp(model.SESSION_PROP_LAST_REFRESHED_KEY, strconv.Itoa(int(sessionCreationTimeMilliseconds)))
+	}
+	session.SetUserAgent(r.UserAgent())
 
-	if len(deviceId) > 0 {
-		session.SetExpireInDays(*a.Config().ServiceSettings.SessionLengthMobileInDays)
-
-		// A special case where we logout of all other sessions with the same Id
+	// A special case where we logout of all other sessions with the same Id
+	isMobile := len(deviceId) > 0
+	if isMobile {
 		if err := a.RevokeSessionsForDeviceId(user.Id, deviceId, ""); err != nil {
 			err.StatusCode = http.StatusInternalServerError
 			return nil, err
 		}
-	} else {
-		session.SetExpireInDays(*a.Config().ServiceSettings.SessionLengthWebInDays)
 	}
-
-	ua := uasurfer.Parse(r.UserAgent())
-
-	plat := getPlatformName(ua)
-	os := getOSName(ua)
-	bname := getBrowserName(ua, r.UserAgent())
-	bversion := getBrowserVersion(ua, r.UserAgent())
-
-	session.AddProp(model.SESSION_PROP_PLATFORM, plat)
-	session.AddProp(model.SESSION_PROP_OS, os)
-	session.AddProp(model.SESSION_PROP_BROWSER, fmt.Sprintf("%v/%v", bname, bversion))
 
 	var err *model.AppError
 	if session, err = a.CreateSession(session); err != nil {
@@ -161,15 +159,63 @@ func (a *App) DoLogin(w http.ResponseWriter, r *http.Request, user *model.User, 
 		return nil, err
 	}
 
+	a.SetHTTPAuthInformation(w, r, session)
+
+	return session, nil
+}
+
+func (a *App) DoRefresh(w http.ResponseWriter, r *http.Request) (*model.Session, *model.AppError) {
+	sessionSettings := &a.Config().SessionSettings
+
+	token, tokenLocation := ParseAuthTokenFromRequest(r)
+	// CSRF Check
+	if tokenLocation == TokenLocationCookie {
+		if r.Header.Get(model.HEADER_REQUESTED_WITH) != model.HEADER_REQUESTED_WITH_XML {
+			return nil, model.NewAppError("ServeHTTP", "api.context.session_expired.app_error", nil, "token="+token+" Appears to be a CSRF attempt", http.StatusUnauthorized)
+		}
+	}
+
+	session, err := a.GetSession(token)
+	if session == nil || session.IsExpired(sessionSettings) || !session.IsRefreshable() {
+		return nil, model.NewAppError("ServeHTTP", "api.context.session_expired.app_error", nil, "token="+token, http.StatusUnauthorized)
+	}
+
+	oldSessionId := session.Id
+	a.Go(func() {
+		<-time.After(10 * time.Second)
+		// Revoke existing session
+		a.RevokeSessionById(oldSessionId)
+	})
+
+	// Prepare new session.
+	sessionRefreshTime := time.Now()
+	sessionRefreshTimeMilliseconds := utils.MillisFromTime(sessionRefreshTime)
+	session.AddProp(model.SESSION_PROP_LAST_REFRESHED_KEY, strconv.FormatInt(sessionRefreshTimeMilliseconds, 10))
+	session.GenerateCSRF()
+	session.SetUserAgent(r.UserAgent())
+	session.Token = ""
+	session.Id = ""
+
+	if session, err = a.CreateSession(session); err != nil {
+		err.StatusCode = http.StatusInternalServerError
+		return nil, err
+	}
+	a.SetHTTPAuthInformation(w, r, session)
+
+	return session, nil
+}
+
+func (a *App) SetHTTPAuthInformation(w http.ResponseWriter, r *http.Request, session *model.Session) {
 	w.Header().Set(model.HEADER_TOKEN, session.Token)
 
-	secure := false
-	if GetProtocol(r) == "https" {
-		secure = true
+	secure := true
+	if GetProtocol(r) == "http" {
+		secure = false
 	}
 
 	domain := a.GetCookieDomain()
-	expiresAt := time.Unix(model.GetMillis()/1000+int64(maxAge), 0)
+	expiresAt := session.ExpiresAt(&a.Config().SessionSettings)
+	maxAge := int(time.Until(expiresAt) / time.Second)
 	sessionCookie := &http.Cookie{
 		Name:     model.SESSION_COOKIE_TOKEN,
 		Value:    session.Token,
@@ -183,7 +229,7 @@ func (a *App) DoLogin(w http.ResponseWriter, r *http.Request, user *model.User, 
 
 	userCookie := &http.Cookie{
 		Name:    model.SESSION_COOKIE_USER,
-		Value:   user.Id,
+		Value:   session.UserId,
 		Path:    "/",
 		MaxAge:  maxAge,
 		Expires: expiresAt,
@@ -193,8 +239,6 @@ func (a *App) DoLogin(w http.ResponseWriter, r *http.Request, user *model.User, 
 
 	http.SetCookie(w, sessionCookie)
 	http.SetCookie(w, userCookie)
-
-	return session, nil
 }
 
 func GetProtocol(r *http.Request) string {

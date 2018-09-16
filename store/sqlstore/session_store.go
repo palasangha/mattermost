@@ -196,9 +196,9 @@ func (me SqlSessionStore) UpdateRoles(userId, roles string) store.StoreChannel {
 	})
 }
 
-func (me SqlSessionStore) UpdateDeviceId(id string, deviceId string, expiresAt int64) store.StoreChannel {
+func (me SqlSessionStore) UpdateDeviceId(id string, deviceId string) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
-		if _, err := me.GetMaster().Exec("UPDATE Sessions SET DeviceId = :DeviceId, ExpiresAt = :ExpiresAt WHERE Id = :Id", map[string]interface{}{"DeviceId": deviceId, "Id": id, "ExpiresAt": expiresAt}); err != nil {
+		if _, err := me.GetMaster().Exec("UPDATE Sessions SET DeviceId = :DeviceId WHERE Id = :Id", map[string]interface{}{"DeviceId": deviceId, "Id": id}); err != nil {
 			result.Err = model.NewAppError("SqlSessionStore.UpdateDeviceId", "store.sql_session.update_device_id.app_error", nil, err.Error(), http.StatusInternalServerError)
 		} else {
 			result.Data = deviceId
@@ -223,20 +223,22 @@ func (me SqlSessionStore) AnalyticsSessionCount() store.StoreChannel {
 	})
 }
 
-func (me SqlSessionStore) Cleanup(expiryTime int64, batchSize int64) {
+func (me SqlSessionStore) Cleanup(expiryLength int64, batchSize int64) {
 	mlog.Debug("Cleaning up session store.")
+
+	cleanupTime := time.Now().Add(-time.Duration(expiryLength)*time.Millisecond).UnixNano() / int64(time.Millisecond)
 
 	var query string
 	if me.DriverName() == model.DATABASE_DRIVER_POSTGRES {
-		query = "DELETE FROM Sessions WHERE Id = any (array (SELECT Id FROM Sessions WHERE ExpiresAt != 0 AND :ExpiresAt > ExpiresAt LIMIT :Limit))"
+		query = "DELETE FROM Sessions WHERE Id = any (array (SELECT Id FROM Sessions WHERE CreateAt < :CleanupTime LIMIT :Limit))"
 	} else {
-		query = "DELETE FROM Sessions WHERE ExpiresAt != 0 AND :ExpiresAt > ExpiresAt LIMIT :Limit"
+		query = "DELETE FROM Sessions WHERE CreateAt < :CleanupTime LIMIT :Limit"
 	}
 
 	var rowsAffected int64 = 1
 
 	for rowsAffected > 0 {
-		if sqlResult, err := me.GetMaster().Exec(query, map[string]interface{}{"ExpiresAt": expiryTime, "Limit": batchSize}); err != nil {
+		if sqlResult, err := me.GetMaster().Exec(query, map[string]interface{}{"CleanupTime": cleanupTime, "Limit": batchSize}); err != nil {
 			mlog.Error(fmt.Sprintf("Unable to cleanup session store. err=%v", err.Error()))
 			return
 		} else {

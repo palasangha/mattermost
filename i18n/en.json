@@ -927,6 +927,10 @@
     "translation": "Invalid or expired session, please login again."
   },
   {
+    "id": "api.context.session_needs_refresh.app_error",
+    "translation": "Session has reached refresh expiry, client should renew session."
+  },
+  {
     "id": "api.context.token_provided.app_error",
     "translation": "Session is not OAuth but token was provided in the query string"
   },

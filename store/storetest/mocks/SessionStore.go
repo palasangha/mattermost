@@ -146,13 +146,13 @@ func (_m *SessionStore) Save(session *model.Session) store.StoreChannel {
 	return r0
 }
 
-// UpdateDeviceId provides a mock function with given fields: id, deviceId, expiresAt
-func (_m *SessionStore) UpdateDeviceId(id string, deviceId string, expiresAt int64) store.StoreChannel {
-	ret := _m.Called(id, deviceId, expiresAt)
+// UpdateDeviceId provides a mock function with given fields: id, deviceId
+func (_m *SessionStore) UpdateDeviceId(id string, deviceId string) store.StoreChannel {
+	ret := _m.Called(id, deviceId)
 
 	var r0 store.StoreChannel
-	if rf, ok := ret.Get(0).(func(string, string, int64) store.StoreChannel); ok {
-		r0 = rf(id, deviceId, expiresAt)
+	if rf, ok := ret.Get(0).(func(string, string) store.StoreChannel); ok {
+		r0 = rf(id, deviceId)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(store.StoreChannel)

@@ -98,7 +98,7 @@ func (a *App) sendPushNotificationSync(post *model.Post, user *model.User, chann
 
 	for _, session := range sessions {
 
-		if session.IsExpired() {
+		if session.IsExpired(&a.Config().SessionSettings) {
 			continue
 		}
 
@@ -282,7 +282,7 @@ func (a *App) sendToPushProxy(msg model.PushNotification, session *model.Session
 
 		if pushResponse[model.PUSH_STATUS] == model.PUSH_STATUS_REMOVE {
 			mlog.Info(fmt.Sprintf("Device was reported as removed for UserId=%v SessionId=%v removing push for this session", session.UserId, session.Id), mlog.String("user_id", session.UserId))
-			a.AttachDeviceId(session.Id, "", session.ExpiresAt)
+			a.AttachDeviceId(session.Id, "")
 			a.ClearSessionCacheForUser(session.UserId)
 		}
 

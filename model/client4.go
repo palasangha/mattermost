@@ -25,6 +25,7 @@ const (
 	HEADER_FORWARDED          = "X-Forwarded-For"
 	HEADER_REAL_IP            = "X-Real-IP"
 	HEADER_FORWARDED_PROTO    = "X-Forwarded-Proto"
+	HEADER_USE_REFRESH        = "X-MM-Use-Refresh"
 	HEADER_TOKEN              = "token"
 	HEADER_BEARER             = "BEARER"
 	HEADER_AUTH               = "Authorization"
@@ -570,6 +571,19 @@ func (c *Client4) login(m map[string]string) (*User, *Response) {
 		c.AuthType = HEADER_BEARER
 		defer closeBody(r)
 		return UserFromJson(r.Body), BuildResponse(r)
+	}
+}
+
+// Refresh refreshes the current user's session token.
+func (c *Client4) Refresh() (bool, *Response) {
+	if r, err := c.DoApiPost("/users/login/refresh", ""); err != nil {
+		return false, BuildErrorResponse(r, err)
+	} else {
+		c.AuthToken = r.Header.Get(HEADER_TOKEN)
+		c.AuthType = HEADER_BEARER
+
+		defer closeBody(r)
+		return CheckStatusOK(r), BuildResponse(r)
 	}
 }
 

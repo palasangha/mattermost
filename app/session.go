@@ -27,6 +27,7 @@ func (a *App) CreateSession(session *model.Session) (*model.Session, *model.AppE
 
 func (a *App) GetSession(token string) (*model.Session, *model.AppError) {
 	metrics := a.Metrics
+	sessionSettings := &a.Config().SessionSettings
 
 	var session *model.Session
 	if ts, ok := a.sessionCache.Get(token); ok {
@@ -49,7 +50,7 @@ func (a *App) GetSession(token string) (*model.Session, *model.AppError) {
 					return nil, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token, "Error": ""}, "", http.StatusUnauthorized)
 				}
 
-				if !session.IsExpired() {
+				if !session.ShouldCache(sessionSettings) {
 					a.AddSessionToCache(session)
 				}
 			}
@@ -72,20 +73,20 @@ func (a *App) GetSession(token string) (*model.Session, *model.AppError) {
 		}
 	}
 
-	if session == nil || session.IsExpired() {
-		return nil, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token}, "", http.StatusUnauthorized)
+	if session == nil || (session.IsRefreshable() && session.NeedsRefresh(sessionSettings)) || session.IsExpired(sessionSettings) {
+		return session, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token}, "", http.StatusUnauthorized)
 	}
 
 	license := a.License()
-	if *a.Config().ServiceSettings.SessionIdleTimeoutInMinutes > 0 &&
+	if *sessionSettings.WebIdleTimeoutMinutes > 0 &&
 		license != nil && *license.Features.Compliance &&
 		session != nil && !session.IsOAuth && !session.IsMobileApp() &&
 		session.Props[model.SESSION_PROP_TYPE] != model.SESSION_TYPE_USER_ACCESS_TOKEN {
 
-		timeout := int64(*a.Config().ServiceSettings.SessionIdleTimeoutInMinutes) * 1000 * 60
+		timeout := int64(*sessionSettings.WebIdleTimeoutMinutes) * 1000 * 60
 		if model.GetMillis()-session.LastActivityAt > timeout {
 			a.RevokeSessionById(session.Id)
-			return nil, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token}, "idle timeout", http.StatusUnauthorized)
+			return session, model.NewAppError("GetSession", "api.context.invalid_token.error", map[string]interface{}{"Token": token}, "idle timeout", http.StatusUnauthorized)
 		}
 	}
 
@@ -217,8 +218,8 @@ func (a *App) RevokeSession(session *model.Session) *model.AppError {
 	return nil
 }
 
-func (a *App) AttachDeviceId(sessionId string, deviceId string, expiresAt int64) *model.AppError {
-	if result := <-a.Srv.Store.Session().UpdateDeviceId(sessionId, deviceId, expiresAt); result.Err != nil {
+func (a *App) AttachDeviceId(sessionId string, deviceId string) *model.AppError {
+	if result := <-a.Srv.Store.Session().UpdateDeviceId(sessionId, deviceId); result.Err != nil {
 		return result.Err
 	}
 
@@ -306,7 +307,6 @@ func (a *App) createSessionForUserAccessToken(tokenString string) (*model.Sessio
 
 	session.AddProp(model.SESSION_PROP_USER_ACCESS_TOKEN_ID, token.Id)
 	session.AddProp(model.SESSION_PROP_TYPE, model.SESSION_TYPE_USER_ACCESS_TOKEN)
-	session.SetExpireInDays(model.SESSION_USER_ACCESS_TOKEN_EXPIRY)
 
 	if result := <-a.Srv.Store.Session().Save(session); result.Err != nil {
 		return nil, result.Err

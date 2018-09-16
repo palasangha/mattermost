@@ -3019,3 +3019,39 @@ func TestGetUsersByStatus(t *testing.T) {
 		}
 	})
 }
+
+func TestRefreshSession(t *testing.T) {
+	th := Setup()
+	defer th.TearDown()
+
+	userToCreate := model.User{Email: th.GenerateTestEmail(), Nickname: "Refresh Tester", Password: "password", Username: GenerateTestUsername(), Roles: model.SYSTEM_USER_ROLE_ID}
+	user, resp := th.Client.CreateUser(&userToCreate)
+	CheckNoError(t, resp)
+	CheckCreatedStatus(t, resp)
+
+	th.Client.HttpHeader[model.HEADER_USE_REFRESH] = "true"
+
+	_, loginResp := th.Client.Login(user.Email, userToCreate.Password)
+	CheckOKStatus(t, loginResp)
+
+	_, getMeResp1 := th.Client.GetMe("")
+	CheckOKStatus(t, getMeResp1)
+
+	oldToken := th.Client.AuthToken
+	worked, refreshResp := th.Client.Refresh()
+	CheckOKStatus(t, refreshResp)
+	assert.True(t, worked)
+	assert.NotEqual(t, oldToken, th.Client.AuthToken)
+
+	_, getMeResp2 := th.Client.GetMe("")
+	CheckOKStatus(t, getMeResp2)
+
+	th.Client.AuthToken = oldToken
+
+	_, getMeResp3 := th.Client.GetMe("")
+	CheckUnauthorizedStatus(t, getMeResp3)
+
+	worked2, refreshResp2 := th.Client.Refresh()
+	CheckUnauthorizedStatus(t, refreshResp2)
+	assert.False(t, worked2)
+}

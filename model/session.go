@@ -6,7 +6,9 @@ package model
 import (
 	"encoding/json"
 	"io"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -18,16 +20,17 @@ const (
 	SESSION_PROP_BROWSER              = "browser"
 	SESSION_PROP_TYPE                 = "type"
 	SESSION_PROP_USER_ACCESS_TOKEN_ID = "user_access_token_id"
+	SESSION_PROP_IS_REFRESHABLE_KEY   = "is_refreshable"
+	SESSION_PROP_IS_REFRESHABLE_VALUE = "true"
+	SESSION_PROP_LAST_REFRESHED_KEY   = "last_refreshed"
 	SESSION_TYPE_USER_ACCESS_TOKEN    = "UserAccessToken"
 	SESSION_ACTIVITY_TIMEOUT          = 1000 * 60 * 5 // 5 minutes
-	SESSION_USER_ACCESS_TOKEN_EXPIRY  = 100 * 365     // 100 years
 )
 
 type Session struct {
 	Id             string        `json:"id"`
 	Token          string        `json:"token"`
 	CreateAt       int64         `json:"create_at"`
-	ExpiresAt      int64         `json:"expires_at"`
 	LastActivityAt int64         `json:"last_activity_at"`
 	UserId         string        `json:"user_id"`
 	DeviceId       string        `json:"device_id"`
@@ -75,8 +78,10 @@ func (me *Session) PreSave() {
 		me.Token = NewId()
 	}
 
-	me.CreateAt = GetMillis()
-	me.LastActivityAt = me.CreateAt
+	if me.CreateAt == 0 {
+		me.CreateAt = GetMillis()
+	}
+	me.LastActivityAt = GetMillis()
 
 	if me.Props == nil {
 		me.Props = make(map[string]string)
@@ -87,25 +92,89 @@ func (me *Session) Sanitize() {
 	me.Token = ""
 }
 
-func (me *Session) IsExpired() bool {
-
-	if me.ExpiresAt <= 0 {
-		return false
-	}
-
-	if GetMillis() > me.ExpiresAt {
-		return true
-	}
-
-	return false
+// IsExpire Returns true if the absolute timeout of the session has expired.
+// The session my still be refreshable.
+func (me *Session) IsExpired(settings *SessionSettings) bool {
+	return time.Now().After(me.ExpiresAt(settings))
 }
 
-func (me *Session) SetExpireInDays(days int) {
-	if me.CreateAt == 0 {
-		me.ExpiresAt = GetMillis() + (1000 * 60 * 60 * 24 * int64(days))
+// IsRefreshable returns true if the client has indicated the session is refreshable
+func (me *Session) IsRefreshable() bool {
+	return me.Props[SESSION_PROP_IS_REFRESHABLE_KEY] == SESSION_PROP_IS_REFRESHABLE_VALUE
+}
+
+// IsUserAccessToken returns true if the session is associated with a user access token.
+func (me *Session) IsUserAccessToken() bool {
+	return me.Props[SESSION_PROP_TYPE] == SESSION_TYPE_USER_ACCESS_TOKEN
+}
+
+// NeedsRefresh Returns true if the session needs to be refreshed.
+// Should only be called for web and mobile sessions.
+// Should call IsExpired first to determine if the session is absolutely expired.
+func (me *Session) NeedsRefresh(settings *SessionSettings) bool {
+	return time.Now().After(me.RefreshAt(settings))
+}
+
+// RefreshAt returns the time at which the session will need to be refreshed
+// according to the current session length settings.
+func (me *Session) RefreshAt(settings *SessionSettings) time.Time {
+	validLength := time.Duration(0)
+	if me.IsOAuth {
+		return time.Unix(0, 0)
+	} else if me.IsMobileApp() {
+		validLength = time.Duration(*settings.MobileRenewalTimeoutMinutes) * time.Minute
+	} else if me.IsUserAccessToken() {
+		// User access tokens never need refreshing
+		validLength = time.Hour * 24 * 365 * 100
 	} else {
-		me.ExpiresAt = me.CreateAt + (1000 * 60 * 60 * 24 * int64(days))
+		validLength = time.Duration(*settings.WebRenewalTimeoutMinutes) * time.Minute
 	}
+	refreshed := me.LastRefreshTime()
+	return refreshed.Add(validLength)
+}
+
+// ExpiresAt returns the time at which the session will absolutely expire
+// according to the current session length settings.
+func (me *Session) ExpiresAt(settings *SessionSettings) time.Time {
+	validLength := time.Duration(0)
+	if me.IsOAuth {
+		validLength = time.Duration(*settings.OAuthTimeoutMinutes) * time.Minute
+	} else if me.IsMobileApp() {
+		validLength = time.Duration(*settings.MobileTimeoutMinutes) * time.Minute
+	} else if me.IsUserAccessToken() {
+		// User access token sessions don't expire
+		validLength = time.Hour * 24 * 365 * 100
+	} else {
+		validLength = time.Duration(*settings.WebTimeoutMinutes) * time.Minute
+	}
+	created := time.Unix(0, me.CreateAt*int64(time.Millisecond))
+	return created.Add(validLength)
+}
+
+// ExpiresAtMilliseconds is the same as ExpiresAt except returns the
+// unix time in milliseconds
+func (me *Session) ExpiresAtMilliseconds(settings *SessionSettings) int64 {
+	return me.ExpiresAt(settings).UnixNano() / int64(time.Millisecond)
+}
+
+// ShoudCache returns true if the session should be put into the cache after a read.
+func (me *Session) ShouldCache(settings *SessionSettings) bool {
+	return !me.NeedsRefresh(settings) && !me.IsExpired(settings)
+}
+
+// SetUserAgent given a user agent string will parse and set props on the session
+// relating it to the given user agent string.
+func (me *Session) SetUserAgent(uaString string) {
+	/*ua := uasurfer.Parse(uaString)
+
+	plat := getPlatformName(ua)
+	os := getOSName(ua)
+	bname := getBrowserName(ua, uaString)
+	bversion := getBrowserVersion(ua, uaString)
+
+	session.AddProp(SESSION_PROP_PLATFORM, plat)
+	session.AddProp(SESSION_PROP_OS, os)
+	session.AddProp(SESSION_PROP_BROWSER, fmt.Sprintf("%v/%v", bname, bversion))*/
 }
 
 func (me *Session) AddProp(key string, value string) {
@@ -115,6 +184,19 @@ func (me *Session) AddProp(key string, value string) {
 	}
 
 	me.Props[key] = value
+}
+
+func (me *Session) LastRefreshTime() time.Time {
+	if me.Props == nil {
+		return time.Unix(0, 0)
+	}
+
+	lastRefreshMilliseconds, err := strconv.Atoi(me.Props[SESSION_PROP_LAST_REFRESHED_KEY])
+	if err != nil {
+		return time.Unix(0, 0)
+	}
+
+	return time.Unix(0, int64(lastRefreshMilliseconds)*int64(time.Millisecond))
 }
 
 func (me *Session) GetTeamByTeamId(teamId string) *TeamMember {

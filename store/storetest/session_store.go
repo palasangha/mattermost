@@ -49,7 +49,6 @@ func testSessionGet(t *testing.T, ss store.Store) {
 
 	s3 := model.Session{}
 	s3.UserId = s1.UserId
-	s3.ExpiresAt = 1
 	store.Must(ss.Session().Save(&s3))
 
 	if rs1 := (<-ss.Session().Get(s1.Id)); rs1.Err != nil {
@@ -72,18 +71,15 @@ func testSessionGet(t *testing.T, ss store.Store) {
 func testSessionGetWithDeviceId(t *testing.T, ss store.Store) {
 	s1 := model.Session{}
 	s1.UserId = model.NewId()
-	s1.ExpiresAt = model.GetMillis() + 10000
 	store.Must(ss.Session().Save(&s1))
 
 	s2 := model.Session{}
 	s2.UserId = s1.UserId
 	s2.DeviceId = model.NewId()
-	s2.ExpiresAt = model.GetMillis() + 10000
 	store.Must(ss.Session().Save(&s2))
 
 	s3 := model.Session{}
 	s3.UserId = s1.UserId
-	s3.ExpiresAt = 1
 	s3.DeviceId = model.NewId()
 	store.Must(ss.Session().Save(&s3))
 
@@ -189,7 +185,7 @@ func testSessionUpdateDeviceId(t *testing.T, ss store.Store) {
 	s1.UserId = model.NewId()
 	store.Must(ss.Session().Save(&s1))
 
-	if rs1 := (<-ss.Session().UpdateDeviceId(s1.Id, model.PUSH_NOTIFY_APPLE+":1234567890", s1.ExpiresAt)); rs1.Err != nil {
+	if rs1 := (<-ss.Session().UpdateDeviceId(s1.Id, model.PUSH_NOTIFY_APPLE+":1234567890")); rs1.Err != nil {
 		t.Fatal(rs1.Err)
 	}
 
@@ -197,7 +193,7 @@ func testSessionUpdateDeviceId(t *testing.T, ss store.Store) {
 	s2.UserId = model.NewId()
 	store.Must(ss.Session().Save(&s2))
 
-	if rs2 := (<-ss.Session().UpdateDeviceId(s2.Id, model.PUSH_NOTIFY_APPLE+":1234567890", s1.ExpiresAt)); rs2.Err != nil {
+	if rs2 := (<-ss.Session().UpdateDeviceId(s2.Id, model.PUSH_NOTIFY_APPLE+":1234567890")); rs2.Err != nil {
 		t.Fatal(rs2.Err)
 	}
 }
@@ -207,7 +203,7 @@ func testSessionUpdateDeviceId2(t *testing.T, ss store.Store) {
 	s1.UserId = model.NewId()
 	store.Must(ss.Session().Save(&s1))
 
-	if rs1 := (<-ss.Session().UpdateDeviceId(s1.Id, model.PUSH_NOTIFY_APPLE_REACT_NATIVE+":1234567890", s1.ExpiresAt)); rs1.Err != nil {
+	if rs1 := (<-ss.Session().UpdateDeviceId(s1.Id, model.PUSH_NOTIFY_APPLE_REACT_NATIVE+":1234567890")); rs1.Err != nil {
 		t.Fatal(rs1.Err)
 	}
 
@@ -215,7 +211,7 @@ func testSessionUpdateDeviceId2(t *testing.T, ss store.Store) {
 	s2.UserId = model.NewId()
 	store.Must(ss.Session().Save(&s2))
 
-	if rs2 := (<-ss.Session().UpdateDeviceId(s2.Id, model.PUSH_NOTIFY_APPLE_REACT_NATIVE+":1234567890", s1.ExpiresAt)); rs2.Err != nil {
+	if rs2 := (<-ss.Session().UpdateDeviceId(s2.Id, model.PUSH_NOTIFY_APPLE_REACT_NATIVE+":1234567890")); rs2.Err != nil {
 		t.Fatal(rs2.Err)
 	}
 }
@@ -242,7 +238,6 @@ func testSessionStoreUpdateLastActivityAt(t *testing.T, ss store.Store) {
 func testSessionCount(t *testing.T, ss store.Store) {
 	s1 := model.Session{}
 	s1.UserId = model.NewId()
-	s1.ExpiresAt = model.GetMillis() + 100000
 	store.Must(ss.Session().Save(&s1))
 
 	if r1 := <-ss.Session().AnalyticsSessionCount(); r1.Err != nil {
@@ -257,32 +252,24 @@ func testSessionCount(t *testing.T, ss store.Store) {
 func testSessionCleanup(t *testing.T, ss store.Store) {
 	now := model.GetMillis()
 
-	s1 := model.Session{}
-	s1.UserId = model.NewId()
-	s1.ExpiresAt = 0 // never expires
-	store.Must(ss.Session().Save(&s1))
-
 	s2 := model.Session{}
-	s2.UserId = s1.UserId
-	s2.ExpiresAt = now + 1000000 // expires in the future
+	s2.UserId = model.NewId()
+	s2.CreateAt = now + 1000000 // expires in the future
 	store.Must(ss.Session().Save(&s2))
 
 	s3 := model.Session{}
 	s3.UserId = model.NewId()
-	s3.ExpiresAt = 1 // expired
+	s3.CreateAt = now - 1000 // expired
 	store.Must(ss.Session().Save(&s3))
 
 	s4 := model.Session{}
 	s4.UserId = model.NewId()
-	s4.ExpiresAt = 2 // expired
+	s4.CreateAt = now - 2000 // expired
 	store.Must(ss.Session().Save(&s4))
 
 	ss.Session().Cleanup(now, 1)
 
-	err := (<-ss.Session().Get(s1.Id)).Err
-	assert.Nil(t, err)
-
-	err = (<-ss.Session().Get(s2.Id)).Err
+	err := (<-ss.Session().Get(s2.Id)).Err
 	assert.Nil(t, err)
 
 	err = (<-ss.Session().Get(s3.Id)).Err
@@ -291,6 +278,5 @@ func testSessionCleanup(t *testing.T, ss store.Store) {
 	err = (<-ss.Session().Get(s4.Id)).Err
 	assert.NotNil(t, err)
 
-	store.Must(ss.Session().Remove(s1.Id))
 	store.Must(ss.Session().Remove(s2.Id))
 }

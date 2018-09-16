@@ -118,7 +118,7 @@ func (a *App) GetOAuthImplicitRedirect(userId string, authRequest *model.Authori
 	values := &url.Values{}
 	values.Add("access_token", session.Token)
 	values.Add("token_type", "bearer")
-	values.Add("expires_in", strconv.FormatInt((session.ExpiresAt-model.GetMillis())/1000, 10))
+	values.Add("expires_in", strconv.FormatInt(int64(time.Until(session.ExpiresAt(&a.Config().SessionSettings))/time.Second), 10))
 	values.Add("scope", authRequest.Scope)
 	values.Add("state", authRequest.State)
 
@@ -210,7 +210,7 @@ func (a *App) GetOAuthAccessTokenForImplicitFlow(userId string, authRequest *mod
 		return nil, err
 	}
 
-	accessData := &model.AccessData{ClientId: authRequest.ClientId, UserId: user.Id, Token: session.Token, RefreshToken: "", RedirectUri: authRequest.RedirectUri, ExpiresAt: session.ExpiresAt, Scope: authRequest.Scope}
+	accessData := &model.AccessData{ClientId: authRequest.ClientId, UserId: user.Id, Token: session.Token, RefreshToken: "", RedirectUri: authRequest.RedirectUri, ExpiresAt: session.ExpiresAtMilliseconds(&a.Config().SessionSettings), Scope: authRequest.Scope}
 
 	if result := <-a.Srv.Store.OAuth().SaveAccessData(accessData); result.Err != nil {
 		mlog.Error(fmt.Sprint(result.Err))
@@ -291,7 +291,7 @@ func (a *App) GetOAuthAccessTokenForCodeFlow(clientId, grantType, redirectUri, c
 				session = result
 			}
 
-			accessData = &model.AccessData{ClientId: clientId, UserId: user.Id, Token: session.Token, RefreshToken: model.NewId(), RedirectUri: redirectUri, ExpiresAt: session.ExpiresAt, Scope: authData.Scope}
+			accessData = &model.AccessData{ClientId: clientId, UserId: user.Id, Token: session.Token, RefreshToken: model.NewId(), RedirectUri: redirectUri, ExpiresAt: session.ExpiresAtMilliseconds(&a.Config().SessionSettings), Scope: authData.Scope}
 
 			if result := <-a.Srv.Store.OAuth().SaveAccessData(accessData); result.Err != nil {
 				mlog.Error(fmt.Sprint(result.Err))
@@ -302,7 +302,7 @@ func (a *App) GetOAuthAccessTokenForCodeFlow(clientId, grantType, redirectUri, c
 				AccessToken:  session.Token,
 				TokenType:    model.ACCESS_TOKEN_TYPE,
 				RefreshToken: accessData.RefreshToken,
-				ExpiresIn:    int32(*a.Config().ServiceSettings.SessionLengthSSOInDays * 60 * 60 * 24),
+				ExpiresIn:    int32(*a.Config().SessionSettings.OAuthTimeoutMinutes * 60),
 			}
 		}
 
@@ -335,7 +335,6 @@ func (a *App) newSession(appName string, user *model.User) (*model.Session, *mod
 	// set new token an session
 	session := &model.Session{UserId: user.Id, Roles: user.Roles, IsOAuth: true}
 	session.GenerateCSRF()
-	session.SetExpireInDays(*a.Config().ServiceSettings.SessionLengthSSOInDays)
 	session.AddProp(model.SESSION_PROP_PLATFORM, appName)
 	session.AddProp(model.SESSION_PROP_OS, "OAuth2")
 	session.AddProp(model.SESSION_PROP_BROWSER, "OAuth2")
@@ -362,7 +361,7 @@ func (a *App) newSessionUpdateToken(appName string, accessData *model.AccessData
 
 	accessData.Token = session.Token
 	accessData.RefreshToken = model.NewId()
-	accessData.ExpiresAt = session.ExpiresAt
+	accessData.ExpiresAt = session.ExpiresAtMilliseconds(&a.Config().SessionSettings)
 	if result := <-a.Srv.Store.OAuth().UpdateAccessData(accessData); result.Err != nil {
 		mlog.Error(fmt.Sprint(result.Err))
 		return nil, model.NewAppError("newSessionUpdateToken", "web.get_access_token.internal_saving.app_error", nil, "", http.StatusInternalServerError)
@@ -371,7 +370,7 @@ func (a *App) newSessionUpdateToken(appName string, accessData *model.AccessData
 		AccessToken:  session.Token,
 		RefreshToken: accessData.RefreshToken,
 		TokenType:    model.ACCESS_TOKEN_TYPE,
-		ExpiresIn:    int32(*a.Config().ServiceSettings.SessionLengthSSOInDays * 60 * 60 * 24),
+		ExpiresIn:    int32(*a.Config().SessionSettings.OAuthTimeoutMinutes * 60 * 60 * 24),
 	}
 
 	return accessRsp, nil

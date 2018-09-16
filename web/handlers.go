@@ -14,6 +14,8 @@ import (
 	"github.com/mattermost/mattermost-server/utils"
 )
 
+const HttpStatusNeedsRefresh = 489
+
 func (w *Web) NewHandler(h func(*Context, http.ResponseWriter, *http.Request)) http.Handler {
 	return &Handler{
 		App:            w.App,
@@ -95,6 +97,17 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			c.Log.Info("Invalid session", mlog.Err(err))
 			if err.StatusCode == http.StatusInternalServerError {
 				c.Err = err
+			} else if session != nil && session.IsRefreshable() && session.NeedsRefresh(&c.App.Config().SessionSettings) && !session.IsExpired(&c.App.Config().SessionSettings) && h.RequireSession {
+				if tokenLocation == app.TokenLocationCookie {
+					if session, err := c.App.DoRefresh(w, r); err != nil {
+						c.Err = err
+					} else {
+						c.Log.Info("Session automaticly refreshed.")
+						c.Session = *session
+					}
+				} else {
+					c.Err = model.NewAppError("ServeHTTP", "api.context.session_needs_refresh.app_error", nil, "token="+token, HttpStatusNeedsRefresh)
+				}
 			} else if h.RequireSession {
 				c.RemoveSessionCookie(w, r)
 				c.Err = model.NewAppError("ServeHTTP", "api.context.session_expired.app_error", nil, "token="+token, http.StatusUnauthorized)

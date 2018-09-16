@@ -9,9 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 
-	"github.com/mattermost/mattermost-server/app"
 	"github.com/mattermost/mattermost-server/mlog"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/store"
@@ -48,6 +46,7 @@ func (api *API) InitUser() {
 
 	api.BaseRoutes.Users.Handle("/login", api.ApiHandler(login)).Methods("POST")
 	api.BaseRoutes.Users.Handle("/login/switch", api.ApiHandler(switchAccountType)).Methods("POST")
+	api.BaseRoutes.Users.Handle("/login/refresh", api.ApiHandler(refreshSession)).Methods("POST")
 	api.BaseRoutes.Users.Handle("/logout", api.ApiHandler(logout)).Methods("POST")
 
 	api.BaseRoutes.UserByUsername.Handle("", api.ApiSessionRequired(getUserByUsername)).Methods("GET")
@@ -1048,6 +1047,18 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(user.ToJson()))
 }
 
+func refreshSession(c *Context, w http.ResponseWriter, r *http.Request) {
+	if _, err := c.App.DoRefresh(w, r); err != nil {
+		c.Err = err
+		if c.Err.StatusCode != http.StatusInternalServerError {
+			c.RemoveSessionCookie(w, r)
+		}
+		return
+	}
+
+	ReturnStatusOK(w)
+}
+
 func logout(c *Context, w http.ResponseWriter, r *http.Request) {
 	Logout(c, w, r)
 }
@@ -1162,34 +1173,13 @@ func attachDeviceId(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.App.ClearSessionCacheForUser(c.Session.UserId)
-	c.Session.SetExpireInDays(*c.App.Config().ServiceSettings.SessionLengthMobileInDays)
-
-	maxAge := *c.App.Config().ServiceSettings.SessionLengthMobileInDays * 60 * 60 * 24
-
-	secure := false
-	if app.GetProtocol(r) == "https" {
-		secure = true
-	}
-
-	expiresAt := time.Unix(model.GetMillis()/1000+int64(maxAge), 0)
-	sessionCookie := &http.Cookie{
-		Name:     model.SESSION_COOKIE_TOKEN,
-		Value:    c.Session.Token,
-		Path:     "/",
-		MaxAge:   maxAge,
-		Expires:  expiresAt,
-		HttpOnly: true,
-		Domain:   c.App.GetCookieDomain(),
-		Secure:   secure,
-	}
-
-	http.SetCookie(w, sessionCookie)
-
-	if err := c.App.AttachDeviceId(c.Session.Id, deviceId, c.Session.ExpiresAt); err != nil {
+	if err := c.App.AttachDeviceId(c.Session.Id, deviceId); err != nil {
 		c.Err = err
 		return
 	}
+
+	c.App.ClearSessionCacheForUser(c.Session.UserId)
+	c.App.SetHTTPAuthInformation(w, r, &c.Session)
 
 	c.LogAudit("")
 	ReturnStatusOK(w)
