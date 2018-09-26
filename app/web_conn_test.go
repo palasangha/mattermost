@@ -28,7 +28,6 @@ func TestWebConnShouldSendEvent(t *testing.T) {
 
 	basicUserWc.SetSession(session)
 	basicUserWc.SetSessionToken(session.Token)
-	basicUserWc.SetSessionExpiresAt(session.ExpiresAt)
 
 	session2, err := th.App.CreateSession(&model.Session{UserId: th.BasicUser2.Id, Roles: th.BasicUser2.GetRawRoles()})
 	require.Nil(t, err)
@@ -41,7 +40,6 @@ func TestWebConnShouldSendEvent(t *testing.T) {
 
 	basicUser2Wc.SetSession(session2)
 	basicUser2Wc.SetSessionToken(session2.Token)
-	basicUser2Wc.SetSessionExpiresAt(session2.ExpiresAt)
 
 	session3, err := th.App.CreateSession(&model.Session{UserId: th.SystemAdminUser.Id, Roles: th.SystemAdminUser.GetRawRoles()})
 	require.Nil(t, err)
@@ -54,7 +52,6 @@ func TestWebConnShouldSendEvent(t *testing.T) {
 
 	adminUserWc.SetSession(session3)
 	adminUserWc.SetSessionToken(session3.Token)
-	adminUserWc.SetSessionExpiresAt(session3.ExpiresAt)
 
 	cases := []struct {
 		Description   string

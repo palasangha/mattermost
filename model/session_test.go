@@ -6,7 +6,6 @@ package model
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -50,18 +49,6 @@ func TestSessionJson(t *testing.T) {
 	}
 
 	session.Sanitize()
-
-	if session.IsExpired() {
-		t.Fatal("Shouldn't expire")
-	}
-
-	session.ExpiresAt = GetMillis()
-	time.Sleep(10 * time.Millisecond)
-	if !session.IsExpired() {
-		t.Fatal("Should expire")
-	}
-
-	session.SetExpireInDays(10)
 }
 
 func TestSessionCSRF(t *testing.T) {

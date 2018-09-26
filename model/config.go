@@ -376,6 +376,10 @@ func (s *ServiceSettings) SetDefaults() {
 		s.EnableTutorial = NewBool(true)
 	}
 
+	if s.SessionCacheInMinutes == nil {
+		s.SessionCacheInMinutes = NewInt(10)
+	}
+
 	if s.EnableCommands == nil {
 		s.EnableCommands = NewBool(false)
 	}

@@ -73,7 +73,6 @@ func TestOAuthRevokeAccessToken(t *testing.T) {
 	session.UserId = model.NewId()
 	session.Token = model.NewId()
 	session.Roles = model.SYSTEM_USER_ROLE_ID
-	session.SetExpireInDays(1)
 
 	session, _ = th.App.CreateSession(session)
 	if err := th.App.RevokeAccessToken(session.Token); err == nil {
@@ -85,7 +84,6 @@ func TestOAuthRevokeAccessToken(t *testing.T) {
 	accessData.UserId = session.UserId
 	accessData.RedirectUri = "http://example.com"
 	accessData.ClientId = model.NewId()
-	accessData.ExpiresAt = session.ExpiresAt
 
 	if result := <-th.App.Srv.Store.OAuth().SaveAccessData(accessData); result.Err != nil {
 		t.Fatal(result.Err)
@@ -120,7 +118,6 @@ func TestOAuthDeleteApp(t *testing.T) {
 	session.Token = model.NewId()
 	session.Roles = model.SYSTEM_USER_ROLE_ID
 	session.IsOAuth = true
-	session.SetExpireInDays(1)
 
 	session, _ = th.App.CreateSession(session)
 
@@ -129,7 +126,6 @@ func TestOAuthDeleteApp(t *testing.T) {
 	accessData.UserId = session.UserId
 	accessData.RedirectUri = "http://example.com"
 	accessData.ClientId = a1.Id
-	accessData.ExpiresAt = session.ExpiresAt
 
 	if result := <-th.App.Srv.Store.OAuth().SaveAccessData(accessData); result.Err != nil {
 		t.Fatal(result.Err)
