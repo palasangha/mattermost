@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -30,9 +31,14 @@ import (
 	"github.com/mattermost/mattermost-server/mlog"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
+	"github.com/mattermost/mattermost-server/services/httpservice"
+	"github.com/mattermost/mattermost-server/services/mailservice"
 	"github.com/mattermost/mattermost-server/store"
+	"github.com/mattermost/mattermost-server/store/sqlstore"
 	"github.com/mattermost/mattermost-server/utils"
 )
+
+var MaxNotificationsPerChannelDefault int64 = 1000000
 
 type Server struct {
 	Store           store.Store
@@ -100,6 +106,252 @@ type Server struct {
 	diagnosticId        string
 
 	phase2PermissionsMigrationComplete bool
+
+	HTTPService httpservice.HTTPService
+
+	tmpSingleApp *App
+}
+
+func MakeTempApp(s *Server) (outApp *App, outErr error) {
+	a, err := New(s)
+	if err != nil {
+		return nil, err
+	}
+	a.HTTPService = s.HTTPService
+
+	a.CreatePushNotificationsHub()
+	a.StartPushNotificationsHubWorkers()
+
+	defer func() {
+		if outErr != nil {
+			a.Shutdown()
+		}
+	}()
+
+	if utils.T == nil {
+		if err := utils.TranslationsPreInit(); err != nil {
+			return nil, errors.Wrapf(err, "unable to load Mattermost translation files")
+		}
+	}
+	model.AppErrorInit(utils.T)
+
+	if err := a.LoadConfig(a.Srv.configFile); err != nil {
+		return nil, err
+	}
+
+	// Initalize logging
+	a.Log = mlog.NewLogger(utils.MloggerConfigFromLoggerConfig(&a.Config().LogSettings))
+
+	// Redirect default golang logger to this logger
+	mlog.RedirectStdLog(a.Log)
+
+	// Use this app logger as the global logger (eventually remove all instances of global logging)
+	mlog.InitGlobalLogger(a.Log)
+
+	a.Srv.logListenerId = a.AddConfigListener(func(_, after *model.Config) {
+		a.Log.ChangeLevels(utils.MloggerConfigFromLoggerConfig(&after.LogSettings))
+	})
+
+	a.EnableConfigWatch()
+
+	a.LoadTimezones()
+
+	if err := utils.InitTranslations(a.Config().LocalizationSettings); err != nil {
+		return nil, errors.Wrapf(err, "unable to load Mattermost translation files")
+	}
+
+	a.Srv.configListenerId = a.AddConfigListener(func(_, _ *model.Config) {
+		a.configOrLicenseListener()
+
+		message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_CONFIG_CHANGED, "", "", "", nil)
+
+		message.Add("config", a.ClientConfigWithComputed())
+		a.Srv.Go(func() {
+			a.Publish(message)
+		})
+	})
+	a.Srv.licenseListenerId = a.AddLicenseListener(func() {
+		a.configOrLicenseListener()
+
+		message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_LICENSE_CHANGED, "", "", "", nil)
+		message.Add("license", a.GetSanitizedClientLicense())
+		a.Srv.Go(func() {
+			a.Publish(message)
+		})
+
+	})
+
+	if err := a.SetupInviteEmailRateLimiting(); err != nil {
+		return nil, err
+	}
+
+	mlog.Info("Server is initializing...")
+
+	a.initEnterprise()
+
+	if a.Srv.newStore == nil {
+		a.Srv.newStore = func() store.Store {
+			return store.NewLayeredStore(sqlstore.NewSqlSupplier(a.Config().SqlSettings, a.Metrics), a.Metrics, a.Cluster)
+		}
+	}
+
+	if htmlTemplateWatcher, err := utils.NewHTMLTemplateWatcher("templates"); err != nil {
+		mlog.Error(fmt.Sprintf("Failed to parse server templates %v", err))
+	} else {
+		a.Srv.htmlTemplateWatcher = htmlTemplateWatcher
+	}
+
+	a.Srv.Store = a.Srv.newStore()
+
+	if err := a.ensureAsymmetricSigningKey(); err != nil {
+		return nil, errors.Wrapf(err, "unable to ensure asymmetric signing key")
+	}
+
+	if err := a.ensureInstallationDate(); err != nil {
+		return nil, errors.Wrapf(err, "unable to ensure installation date")
+	}
+
+	a.EnsureDiagnosticId()
+	a.regenerateClientConfig()
+
+	a.initJobs()
+	a.AddLicenseListener(func() {
+		a.initJobs()
+	})
+
+	a.Srv.clusterLeaderListenerId = a.AddClusterLeaderChangedListener(func() {
+		mlog.Info("Cluster leader changed. Determining if job schedulers should be running:", mlog.Bool("isLeader", a.IsLeader()))
+		a.Srv.Jobs.Schedulers.HandleClusterLeaderChange(a.IsLeader())
+	})
+
+	subpath, err := utils.GetSubpathFromConfig(a.Config())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse SiteURL subpath")
+	}
+	a.Srv.Router = a.Srv.RootRouter.PathPrefix(subpath).Subrouter()
+	a.Srv.Router.HandleFunc("/plugins/{plugin_id:[A-Za-z0-9\\_\\-\\.]+}", a.ServePluginRequest)
+	a.Srv.Router.HandleFunc("/plugins/{plugin_id:[A-Za-z0-9\\_\\-\\.]+}/{anything:.*}", a.ServePluginRequest)
+
+	// If configured with a subpath, redirect 404s at the root back into the subpath.
+	if subpath != "/" {
+		a.Srv.RootRouter.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.URL.Path = path.Join(subpath, r.URL.Path)
+			http.Redirect(w, r, r.URL.String(), http.StatusFound)
+		})
+	}
+	a.Srv.Router.NotFoundHandler = http.HandlerFunc(a.Handle404)
+
+	a.Srv.WebSocketRouter = &WebSocketRouter{
+		app:      a,
+		handlers: make(map[string]webSocketHandler),
+	}
+
+	mailservice.TestConnection(a.Config())
+
+	if _, err := url.ParseRequestURI(*a.Config().ServiceSettings.SiteURL); err != nil {
+		mlog.Error("SiteURL must be set. Some features will operate incorrectly if the SiteURL is not set. See documentation for details: http://about.mattermost.com/default-site-url")
+	}
+
+	backend, appErr := a.FileBackend()
+	if appErr == nil {
+		appErr = backend.TestConnection()
+	}
+	if appErr != nil {
+		mlog.Error("Problem with file storage settings: " + appErr.Error())
+	}
+
+	if model.BuildEnterpriseReady == "true" {
+		a.LoadLicense()
+	}
+
+	a.DoAdvancedPermissionsMigration()
+	a.DoEmojisPermissionsMigration()
+
+	a.InitPlugins(*a.Config().PluginSettings.Directory, *a.Config().PluginSettings.ClientDirectory)
+	a.AddConfigListener(func(prevCfg, cfg *model.Config) {
+		if *cfg.PluginSettings.Enable {
+			a.InitPlugins(*cfg.PluginSettings.Directory, *a.Config().PluginSettings.ClientDirectory)
+		} else {
+			a.ShutDownPlugins()
+		}
+	})
+
+	return a, nil
+}
+
+func NewServer(options ...Option) (*Server, error) {
+	rootRouter := mux.NewRouter()
+
+	server := &Server{
+		goroutineExitSignal: make(chan struct{}, 1),
+		RootRouter:          rootRouter,
+		configFile:          "config.json",
+		configListeners:     make(map[string]func(*model.Config, *model.Config)),
+		licenseListeners:    map[string]func(){},
+		sessionCache:        utils.NewLru(model.SESSION_CACHE_SIZE),
+		clientConfig:        make(map[string]string),
+	}
+	a, err := MakeTempApp(server)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, option := range options {
+		option(server)
+	}
+
+	server.HTTPService = httpservice.MakeHTTPService(server.tmpSingleApp)
+
+	mlog.Info(fmt.Sprintf("Current version is %v (%v/%v/%v/%v)", model.CurrentVersion, model.BuildNumber, model.BuildDate, model.BuildHash, model.BuildHashEnterprise))
+	mlog.Info(fmt.Sprintf("Enterprise Enabled: %v", model.BuildEnterpriseReady))
+	pwd, _ := os.Getwd()
+	mlog.Info(fmt.Sprintf("Current working directory is %v", pwd))
+	mlog.Info(fmt.Sprintf("Loaded config file from %v", utils.FindConfigFile(server.configFile)))
+
+	license := a.License()
+
+	if license == nil && len(a.Config().SqlSettings.DataSourceReplicas) > 1 {
+		mlog.Warn("More than 1 read replica functionality disabled by current license. Please contact your system administrator about upgrading your enterprise license.")
+		a.UpdateConfig(func(cfg *model.Config) {
+			cfg.SqlSettings.DataSourceReplicas = cfg.SqlSettings.DataSourceReplicas[:1]
+		})
+	}
+
+	if license == nil {
+		a.UpdateConfig(func(cfg *model.Config) {
+			cfg.TeamSettings.MaxNotificationsPerChannel = &MaxNotificationsPerChannelDefault
+		})
+	}
+
+	a.ReloadConfig()
+
+	// Enable developer settings if this is a "dev" build
+	if model.BuildNumber == "dev" {
+		a.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.EnableDeveloper = true })
+	}
+
+	resetStatuses(a)
+
+	return server, nil
+}
+
+func resetStatuses(a *App) {
+	if result := <-a.Srv.Store.Status().ResetAll(); result.Err != nil {
+		mlog.Error(fmt.Sprint("Error to reset the server status.", result.Err.Error()))
+	}
+}
+
+func (s *Server) App() *App {
+	return s.tmpSingleApp
+}
+
+func (s *Server) StartServer() error {
+	return s.tmpSingleApp.StartServer()
+}
+
+func (s *Server) Shutdown() error {
+	s.tmpSingleApp.Shutdown()
+	return nil
 }
 
 // Go creates a goroutine, but maintains a record of it to ensure that execution completes before

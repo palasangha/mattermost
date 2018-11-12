@@ -366,6 +366,13 @@ ifeq ($(BUILD_ENTERPRISE_READY),true)
 	rm -f config/*.key
 endif
 
+test-compile:
+	@echo COMPILE TESTS
+
+	for package in $(TE_PACKAGES) $(EE_PACKAGES); do \
+		$(GO) test $(GOFLAGS) -c $$package; \
+	done
+
 test-server: test-te test-ee ## Runs tests.
 	find . -type d -name data -not -path './vendor/*' | xargs rm -rf
 

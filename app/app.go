@@ -7,12 +7,8 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"path"
 	"reflect"
 	"strconv"
-
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/einterfaces"
 	ejobs "github.com/mattermost/mattermost-server/einterfaces/jobs"
@@ -21,8 +17,6 @@ import (
 	"github.com/mattermost/mattermost-server/mlog"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/services/httpservice"
-	"github.com/mattermost/mattermost-server/store"
-	"github.com/mattermost/mattermost-server/store/sqlstore"
 	"github.com/mattermost/mattermost-server/utils"
 )
 
@@ -52,164 +46,17 @@ var appCount = 0
 
 // New creates a new App. You must call Shutdown when you're done with it.
 // XXX: For now, only one at a time is allowed as some resources are still shared.
-func New(options ...Option) (outApp *App, outErr error) {
+func New(s *Server) (outApp *App, outErr error) {
 	appCount++
 	if appCount > 1 {
 		panic("Only one App should exist at a time. Did you forget to call Shutdown()?")
 	}
 
-	rootRouter := mux.NewRouter()
-
 	app := &App{
-		Srv: &Server{
-			goroutineExitSignal: make(chan struct{}, 1),
-			RootRouter:          rootRouter,
-			configFile:          "config.json",
-			configListeners:     make(map[string]func(*model.Config, *model.Config)),
-			licenseListeners:    map[string]func(){},
-			sessionCache:        utils.NewLru(model.SESSION_CACHE_SIZE),
-			clientConfig:        make(map[string]string),
-		},
-	}
-
-	app.HTTPService = httpservice.MakeHTTPService(app)
-
-	app.CreatePushNotificationsHub()
-	app.StartPushNotificationsHubWorkers()
-
-	defer func() {
-		if outErr != nil {
-			app.Shutdown()
-		}
-	}()
-
-	for _, option := range options {
-		option(app)
-	}
-
-	if utils.T == nil {
-		if err := utils.TranslationsPreInit(); err != nil {
-			return nil, errors.Wrapf(err, "unable to load Mattermost translation files")
-		}
-	}
-	model.AppErrorInit(utils.T)
-
-	if err := app.LoadConfig(app.Srv.configFile); err != nil {
-		return nil, err
-	}
-
-	// Initalize logging
-	app.Log = mlog.NewLogger(utils.MloggerConfigFromLoggerConfig(&app.Config().LogSettings))
-
-	// Redirect default golang logger to this logger
-	mlog.RedirectStdLog(app.Log)
-
-	// Use this app logger as the global logger (eventually remove all instances of global logging)
-	mlog.InitGlobalLogger(app.Log)
-
-	app.Srv.logListenerId = app.AddConfigListener(func(_, after *model.Config) {
-		app.Log.ChangeLevels(utils.MloggerConfigFromLoggerConfig(&after.LogSettings))
-	})
-
-	app.EnableConfigWatch()
-
-	app.LoadTimezones()
-
-	if err := utils.InitTranslations(app.Config().LocalizationSettings); err != nil {
-		return nil, errors.Wrapf(err, "unable to load Mattermost translation files")
-	}
-
-	app.Srv.configListenerId = app.AddConfigListener(func(_, _ *model.Config) {
-		app.configOrLicenseListener()
-
-		message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_CONFIG_CHANGED, "", "", "", nil)
-
-		message.Add("config", app.ClientConfigWithComputed())
-		app.Srv.Go(func() {
-			app.Publish(message)
-		})
-	})
-	app.Srv.licenseListenerId = app.AddLicenseListener(func() {
-		app.configOrLicenseListener()
-
-		message := model.NewWebSocketEvent(model.WEBSOCKET_EVENT_LICENSE_CHANGED, "", "", "", nil)
-		message.Add("license", app.GetSanitizedClientLicense())
-		app.Srv.Go(func() {
-			app.Publish(message)
-		})
-
-	})
-
-	if err := app.SetupInviteEmailRateLimiting(); err != nil {
-		return nil, err
-	}
-
-	mlog.Info("Server is initializing...")
-
-	app.initEnterprise()
-
-	if app.Srv.newStore == nil {
-		app.Srv.newStore = func() store.Store {
-			return store.NewLayeredStore(sqlstore.NewSqlSupplier(app.Config().SqlSettings, app.Metrics), app.Metrics, app.Cluster)
-		}
-	}
-
-	if htmlTemplateWatcher, err := utils.NewHTMLTemplateWatcher("templates"); err != nil {
-		mlog.Error(fmt.Sprintf("Failed to parse server templates %v", err))
-	} else {
-		app.Srv.htmlTemplateWatcher = htmlTemplateWatcher
-	}
-
-	app.Srv.Store = app.Srv.newStore()
-
-	if err := app.ensureAsymmetricSigningKey(); err != nil {
-		return nil, errors.Wrapf(err, "unable to ensure asymmetric signing key")
-	}
-
-	if err := app.ensureInstallationDate(); err != nil {
-		return nil, errors.Wrapf(err, "unable to ensure installation date")
-	}
-
-	app.EnsureDiagnosticId()
-	app.regenerateClientConfig()
-
-	app.initJobs()
-	app.AddLicenseListener(func() {
-		app.initJobs()
-	})
-
-	app.Srv.clusterLeaderListenerId = app.AddClusterLeaderChangedListener(func() {
-		mlog.Info("Cluster leader changed. Determining if job schedulers should be running:", mlog.Bool("isLeader", app.IsLeader()))
-		app.Srv.Jobs.Schedulers.HandleClusterLeaderChange(app.IsLeader())
-	})
-
-	subpath, err := utils.GetSubpathFromConfig(app.Config())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse SiteURL subpath")
-	}
-	app.Srv.Router = app.Srv.RootRouter.PathPrefix(subpath).Subrouter()
-	app.Srv.Router.HandleFunc("/plugins/{plugin_id:[A-Za-z0-9\\_\\-\\.]+}", app.ServePluginRequest)
-	app.Srv.Router.HandleFunc("/plugins/{plugin_id:[A-Za-z0-9\\_\\-\\.]+}/{anything:.*}", app.ServePluginRequest)
-
-	// If configured with a subpath, redirect 404s at the root back into the subpath.
-	if subpath != "/" {
-		app.Srv.RootRouter.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.URL.Path = path.Join(subpath, r.URL.Path)
-			http.Redirect(w, r, r.URL.String(), http.StatusFound)
-		})
-	}
-	app.Srv.Router.NotFoundHandler = http.HandlerFunc(app.Handle404)
-
-	app.Srv.WebSocketRouter = &WebSocketRouter{
-		app:      app,
-		handlers: make(map[string]webSocketHandler),
+		Srv: s,
 	}
 
 	return app, nil
-}
-
-func (a *App) configOrLicenseListener() {
-	a.regenerateClientConfig()
 }
 
 func (a *App) Shutdown() {
@@ -242,6 +89,10 @@ func (a *App) Shutdown() {
 
 	a.HTTPService.Close()
 	a.Srv = nil
+}
+
+func (a *App) configOrLicenseListener() {
+	a.regenerateClientConfig()
 }
 
 var accountMigrationInterface func(*App) einterfaces.AccountMigrationInterface

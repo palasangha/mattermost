@@ -47,10 +47,11 @@ type TestHelper struct {
 }
 
 func Setup() *TestHelper {
-	a, err := app.New(app.StoreOverride(testStore), app.DisableConfigWatch)
+	s, err := app.NewServer(app.StoreOverride(testStore), app.DisableConfigWatch)
 	if err != nil {
 		panic(err)
 	}
+	a := s.App()
 	prevListenAddress := *a.Config().ServiceSettings.ListenAddress
 	a.UpdateConfig(func(cfg *model.Config) { *cfg.ServiceSettings.ListenAddress = ":0" })
 	serverErr := a.StartServer()

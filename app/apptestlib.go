@@ -87,13 +87,13 @@ func setupTestHelper(enterprise bool) *TestHelper {
 		options = append(options, StoreOverride(testStore))
 	}
 
-	a, err := New(options...)
+	s, err := NewServer(options...)
 	if err != nil {
 		panic(err)
 	}
 
 	th := &TestHelper{
-		App:            a,
+		App:            s.App(),
 		tempConfigPath: tempConfig.Name(),
 	}
 
