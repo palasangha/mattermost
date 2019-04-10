@@ -17,6 +17,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type PluginSetting interface {
+	GetElements() []*PluginSettingElement
+}
+
 type PluginOption struct {
 	// The display name for the option.
 	DisplayName string `json:"display_name" yaml:"display_name"`
@@ -25,7 +29,7 @@ type PluginOption struct {
 	Value string `json:"value" yaml:"value"`
 }
 
-type PluginSetting struct {
+type PluginSettingElement struct {
 	// The key that the setting will be assigned to in the configuration file.
 	Key string `json:"key" yaml:"key"`
 
@@ -67,6 +71,22 @@ type PluginSetting struct {
 	// For "radio" or "dropdown" settings, this is the list of pre-defined options that the user can choose
 	// from.
 	Options []*PluginOption `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+func (ps *PluginSettingElement) GetElements() []*PluginSettingElement {
+	return []*PluginSettingElement{ps}
+}
+
+type PluginSettingGroup struct {
+	Settings []*PluginSettingElement
+}
+
+func (ps *PluginSettingGroup) GetElements() []*PluginSettingElement {
+	ret := []*PluginSettingElement{}
+	for _, s := range ps.Settings {
+		ret = append(ret, s.GetElements()[0])
+	}
+	return ret
 }
 
 type PluginSettingsSchema struct {
