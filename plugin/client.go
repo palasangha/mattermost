@@ -5,6 +5,7 @@ package plugin
 
 import (
 	"github.com/hashicorp/go-plugin"
+	"github.com/mattermost/mattermost-server/plugin/helper"
 )
 
 // Starts the serving of a Mattermost plugin over net/rpc. gRPC is not yet supported.
@@ -31,11 +32,13 @@ func ClientMain(pluginImplementation interface{}) {
 
 type MattermostPlugin struct {
 	// API exposes the plugin api, and becomes available just prior to the OnActive hook.
-	API API
+	API    API
+	Helper Helper
 }
 
 // SetAPI persists the given API interface to the plugin. It is invoked just prior to the
 // OnActivate hook, exposing the API for use by the plugin.
 func (p *MattermostPlugin) SetAPI(api API) {
 	p.API = api
+	p.Helper = helper.NewHelper(api)
 }

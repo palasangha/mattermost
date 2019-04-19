@@ -8,6 +8,10 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 )
 
+type Helper interface {
+	HelloWorld()
+}
+
 // The API can be used to retrieve data or perform actions on behalf of the plugin. Most methods
 // have direct counterparts in the REST API and very similar behavior.
 //
