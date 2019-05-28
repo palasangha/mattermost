@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/mattermost/mattermost-server/mlog"
 	"github.com/mattermost/mattermost-server/testlib"
 
 	"github.com/mattermost/mattermost-server/app"
@@ -40,7 +41,7 @@ type TestHelper struct {
 	tempWorkspace string
 }
 
-func Setup() *TestHelper {
+func Setup(tb testing.TB) *TestHelper {
 	store := mainHelper.GetStore()
 	store.DropAllTables()
 
@@ -52,6 +53,7 @@ func Setup() *TestHelper {
 	var options []app.Option
 	options = append(options, app.ConfigStore(memoryStore))
 	options = append(options, app.StoreOverride(mainHelper.Store))
+	options = append(options, app.SetLogger(mlog.NewTestingLogger(tb)))
 
 	s, err := app.NewServer(options...)
 	if err != nil {
@@ -136,7 +138,7 @@ func (th *TestHelper) TearDown() {
 }
 
 func TestPublicFilesRequest(t *testing.T) {
-	th := Setup().InitPlugins()
+	th := Setup(t).InitPlugins()
 	defer th.TearDown()
 
 	pluginDir, err := ioutil.TempDir("", "")
@@ -165,7 +167,7 @@ func TestPublicFilesRequest(t *testing.T) {
 	func main() {
 		plugin.ClientMain(&MyPlugin{})
 	}
-	
+
 	`
 	// Compile and write the plugin
 	backend := filepath.Join(pluginDir, pluginID, "backend.exe")
@@ -213,7 +215,7 @@ func TestPublicFilesRequest(t *testing.T) {
 
 /* Test disabled for now so we don't requrie the client to build. Maybe re-enable after client gets moved out.
 func TestStatic(t *testing.T) {
-	Setup()
+	Setup(t)
 
 	// add a short delay to make sure the server is ready to receive requests
 	time.Sleep(1 * time.Second)

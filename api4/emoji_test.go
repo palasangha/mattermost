@@ -17,7 +17,7 @@ import (
 )
 
 func TestCreateEmoji(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -182,7 +182,7 @@ func TestCreateEmoji(t *testing.T) {
 }
 
 func TestGetEmojiList(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -259,7 +259,7 @@ func TestGetEmojiList(t *testing.T) {
 }
 
 func TestDeleteEmoji(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -426,7 +426,7 @@ func TestDeleteEmoji(t *testing.T) {
 }
 
 func TestGetEmoji(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -455,7 +455,7 @@ func TestGetEmoji(t *testing.T) {
 }
 
 func TestGetEmojiByName(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -482,7 +482,7 @@ func TestGetEmojiByName(t *testing.T) {
 }
 
 func TestGetEmojiImage(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -589,7 +589,7 @@ func TestGetEmojiImage(t *testing.T) {
 }
 
 func TestSearchEmoji(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -668,7 +668,7 @@ func TestSearchEmoji(t *testing.T) {
 }
 
 func TestAutocompleteEmoji(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 

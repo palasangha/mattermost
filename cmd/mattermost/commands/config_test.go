@@ -73,7 +73,7 @@ type TestNewTeamSettings struct {
 }
 
 func TestConfigValidate(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	tempFile, err := ioutil.TempFile("", "TestConfigValidate")
@@ -85,7 +85,7 @@ func TestConfigValidate(t *testing.T) {
 }
 
 func TestConfigGet(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	t.Run("Error when no arguments are given", func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestConfigGet(t *testing.T) {
 }
 
 func TestConfigSet(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	t.Run("Error when no arguments are given", func(t *testing.T) {
@@ -322,7 +322,7 @@ func TestPrintConfigValues(t *testing.T) {
 }
 
 func TestConfigShow(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	t.Run("error with unknown subcommand", func(t *testing.T) {
@@ -338,7 +338,7 @@ func TestConfigShow(t *testing.T) {
 }
 
 func TestSetConfig(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	// Error when no argument is given
@@ -438,7 +438,7 @@ func TestUpdateMap(t *testing.T) {
 }
 
 func TestConfigMigrate(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	sqlSettings := mainHelper.GetSqlSettings()

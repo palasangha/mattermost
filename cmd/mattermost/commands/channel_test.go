@@ -15,7 +15,7 @@ import (
 )
 
 func TestJoinChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()
@@ -30,7 +30,7 @@ func TestJoinChannel(t *testing.T) {
 }
 
 func TestRemoveChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()
@@ -51,7 +51,7 @@ func TestRemoveChannel(t *testing.T) {
 }
 
 func TestMoveChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	team1 := th.BasicTeam
@@ -77,7 +77,7 @@ func TestMoveChannel(t *testing.T) {
 }
 
 func TestListChannels(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()
@@ -95,7 +95,7 @@ func TestListChannels(t *testing.T) {
 }
 
 func TestRestoreChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()
@@ -108,7 +108,7 @@ func TestRestoreChannel(t *testing.T) {
 }
 
 func TestCreateChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -121,7 +121,7 @@ func TestCreateChannel(t *testing.T) {
 }
 
 func TestRenameChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()
@@ -134,7 +134,7 @@ func TestRenameChannel(t *testing.T) {
 }
 
 func Test_searchChannelCmdF(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	channel := th.CreatePublicChannel()

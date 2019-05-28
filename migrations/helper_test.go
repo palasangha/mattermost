@@ -5,6 +5,7 @@ package migrations
 
 import (
 	"os"
+	"testing"
 	"time"
 
 	"github.com/mattermost/mattermost-server/app"
@@ -28,7 +29,7 @@ type TestHelper struct {
 	tempWorkspace string
 }
 
-func setupTestHelper(enterprise bool) *TestHelper {
+func setupTestHelper(tb testing.TB, enterprise bool) *TestHelper {
 	store := mainHelper.GetStore()
 	store.DropAllTables()
 
@@ -40,6 +41,7 @@ func setupTestHelper(enterprise bool) *TestHelper {
 	var options []app.Option
 	options = append(options, app.ConfigStore(memoryStore))
 	options = append(options, app.StoreOverride(mainHelper.Store))
+	options = append(options, app.SetLogger(mlog.NewTestingLogger(tb)))
 
 	s, err := app.NewServer(options...)
 	if err != nil {
@@ -78,12 +80,12 @@ func setupTestHelper(enterprise bool) *TestHelper {
 	return th
 }
 
-func SetupEnterprise() *TestHelper {
-	return setupTestHelper(true)
+func SetupEnterprise(tb testing.TB) *TestHelper {
+	return setupTestHelper(tb, true)
 }
 
-func Setup() *TestHelper {
-	return setupTestHelper(false)
+func Setup(tb testing.TB) *TestHelper {
+	return setupTestHelper(tb, false)
 }
 
 func (me *TestHelper) InitBasic() *TestHelper {

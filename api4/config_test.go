@@ -12,7 +12,7 @@ import (
 )
 
 func TestGetConfig(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -54,7 +54,7 @@ func TestGetConfig(t *testing.T) {
 }
 
 func TestReloadConfig(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -86,7 +86,7 @@ func TestReloadConfig(t *testing.T) {
 }
 
 func TestUpdateConfig(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -139,7 +139,7 @@ func TestUpdateConfig(t *testing.T) {
 }
 
 func TestUpdateConfigMessageExportSpecialHandling(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	messageExportEnabled := *th.App.Config().MessageExportSettings.EnableExport
@@ -207,7 +207,7 @@ func TestUpdateConfigMessageExportSpecialHandling(t *testing.T) {
 }
 
 func TestUpdateConfigRestrictSystemAdmin(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	th.App.UpdateConfig(func(cfg *model.Config) { *cfg.ExperimentalSettings.RestrictSystemAdmin = true })
 
@@ -235,7 +235,7 @@ func TestGetEnvironmentConfig(t *testing.T) {
 	os.Setenv("MM_SERVICESETTINGS_ENABLECUSTOMEMOJI", "true")
 	defer os.Unsetenv("MM_SERVICESETTINGS_SITEURL")
 
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	t.Run("as system admin", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestGetEnvironmentConfig(t *testing.T) {
 }
 
 func TestGetOldClientConfig(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	testKey := "supersecretkey"

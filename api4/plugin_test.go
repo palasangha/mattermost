@@ -17,7 +17,7 @@ import (
 )
 
 func TestPlugin(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	statesJson, _ := json.Marshal(th.App.Config().PluginSettings.PluginStates)

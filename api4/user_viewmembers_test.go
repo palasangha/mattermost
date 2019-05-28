@@ -8,7 +8,7 @@ import (
 )
 
 func TestApiResctrictedViewMembers(t *testing.T) {
-	th := Setup()
+	th := Setup(t)
 	defer th.TearDown()
 
 	// Create first account for system admin

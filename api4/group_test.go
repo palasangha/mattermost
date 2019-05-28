@@ -16,7 +16,7 @@ import (
 )
 
 func TestGetGroup(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -61,7 +61,7 @@ func TestGetGroup(t *testing.T) {
 }
 
 func TestPatchGroup(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -127,7 +127,7 @@ func TestPatchGroup(t *testing.T) {
 }
 
 func TestLinkGroupTeam(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -165,7 +165,7 @@ func TestLinkGroupTeam(t *testing.T) {
 }
 
 func TestLinkGroupChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -204,7 +204,7 @@ func TestLinkGroupChannel(t *testing.T) {
 }
 
 func TestUnlinkGroupTeam(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -248,7 +248,7 @@ func TestUnlinkGroupTeam(t *testing.T) {
 }
 
 func TestUnlinkGroupChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -298,7 +298,7 @@ func TestUnlinkGroupChannel(t *testing.T) {
 }
 
 func TestGetGroupTeam(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -352,7 +352,7 @@ func TestGetGroupTeam(t *testing.T) {
 }
 
 func TestGetGroupChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -406,7 +406,7 @@ func TestGetGroupChannel(t *testing.T) {
 }
 
 func TestGetGroupTeams(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -455,7 +455,7 @@ func TestGetGroupTeams(t *testing.T) {
 }
 
 func TestGetGroupChannels(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -504,7 +504,7 @@ func TestGetGroupChannels(t *testing.T) {
 }
 
 func TestPatchGroupTeam(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -569,7 +569,7 @@ func TestPatchGroupTeam(t *testing.T) {
 }
 
 func TestPatchGroupChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -634,7 +634,7 @@ func TestPatchGroupChannel(t *testing.T) {
 }
 
 func TestGetGroupsByChannel(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -687,7 +687,7 @@ func TestGetGroupsByChannel(t *testing.T) {
 }
 
 func TestGetGroupsByTeam(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()
@@ -738,7 +738,7 @@ func TestGetGroupsByTeam(t *testing.T) {
 }
 
 func TestGetGroups(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	id := model.NewId()

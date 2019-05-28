@@ -38,7 +38,7 @@ func (th *testHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestPostActionCookies(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -94,7 +94,7 @@ func TestPostActionCookies(t *testing.T) {
 }
 
 func TestOpenDialog(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 
@@ -155,7 +155,7 @@ func TestOpenDialog(t *testing.T) {
 }
 
 func TestSubmitDialog(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 	Client := th.Client
 

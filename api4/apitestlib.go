@@ -61,7 +61,7 @@ func UseTestStore(store store.Store) {
 	testStore = store
 }
 
-func setupTestHelper(enterprise bool, updateConfig func(*model.Config)) *TestHelper {
+func setupTestHelper(tb testing.TB, enterprise bool, updateConfig func(*model.Config)) *TestHelper {
 	testStore.DropAllTables()
 
 	memoryStore, err := config.NewMemoryStore()
@@ -72,6 +72,7 @@ func setupTestHelper(enterprise bool, updateConfig func(*model.Config)) *TestHel
 	var options []app.Option
 	options = append(options, app.ConfigStore(memoryStore))
 	options = append(options, app.StoreOverride(testStore))
+	options = append(options, app.SetLogger(mlog.NewTestingLogger(tb)))
 
 	s, err := app.NewServer(options...)
 	if err != nil {
@@ -147,16 +148,16 @@ func setupTestHelper(enterprise bool, updateConfig func(*model.Config)) *TestHel
 	return th
 }
 
-func SetupEnterprise() *TestHelper {
-	return setupTestHelper(true, nil)
+func SetupEnterprise(tb testing.TB) *TestHelper {
+	return setupTestHelper(tb, true, nil)
 }
 
-func Setup() *TestHelper {
-	return setupTestHelper(false, nil)
+func Setup(tb testing.TB) *TestHelper {
+	return setupTestHelper(tb, false, nil)
 }
 
-func SetupConfig(updateConfig func(cfg *model.Config)) *TestHelper {
-	return setupTestHelper(false, updateConfig)
+func SetupConfig(tb testing.TB, updateConfig func(cfg *model.Config)) *TestHelper {
+	return setupTestHelper(tb, false, updateConfig)
 }
 
 func (me *TestHelper) ShutdownApp() {

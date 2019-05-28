@@ -18,7 +18,7 @@ func handlerForHTTPErrors(c *Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func TestHandlerServeHTTPErrors(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	web := New(th.Server, th.Server.AppOptions, th.Server.Router)
@@ -58,7 +58,7 @@ func handlerForHTTPSecureTransport(c *Context, w http.ResponseWriter, r *http.Re
 }
 
 func TestHandlerServeHTTPSecureTransport(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	th.App.UpdateConfig(func(config *model.Config) {
@@ -102,7 +102,7 @@ func handlerForCSRFToken(c *Context, w http.ResponseWriter, r *http.Request) {
 }
 
 func TestHandlerServeCSRFToken(t *testing.T) {
-	th := Setup().InitBasic()
+	th := Setup(t).InitBasic()
 	defer th.TearDown()
 
 	session := &model.Session{
@@ -204,7 +204,7 @@ func handlerForCSPHeader(c *Context, w http.ResponseWriter, r *http.Request) {
 
 func TestHandlerServeCSPHeader(t *testing.T) {
 	t.Run("non-static", func(t *testing.T) {
-		th := Setup().InitBasic()
+		th := Setup(t).InitBasic()
 		defer th.TearDown()
 
 		web := New(th.Server, th.Server.AppOptions, th.Server.Router)
@@ -226,7 +226,7 @@ func TestHandlerServeCSPHeader(t *testing.T) {
 	})
 
 	t.Run("static, without subpath", func(t *testing.T) {
-		th := Setup().InitBasic()
+		th := Setup(t).InitBasic()
 		defer th.TearDown()
 
 		web := New(th.Server, th.Server.AppOptions, th.Server.Router)
@@ -248,7 +248,7 @@ func TestHandlerServeCSPHeader(t *testing.T) {
 	})
 
 	t.Run("static, with subpath", func(t *testing.T) {
-		th := Setup().InitBasic()
+		th := Setup(t).InitBasic()
 		defer th.TearDown()
 
 		th.App.UpdateConfig(func(cfg *model.Config) {
@@ -273,8 +273,8 @@ func TestHandlerServeCSPHeader(t *testing.T) {
 		assert.Equal(t, response.Header()["Content-Security-Policy"], []string{"frame-ancestors 'self'; script-src 'self' cdn.segment.com/analytics.js/"})
 
 		// TODO: It's hard to unit test this now that the CSP directive is effectively
-		// decided in Setup(). Circle back to this in master once the memory store is
-		// merged, allowing us to mock the desired initial config to take effect in Setup().
+		// decided in Setup(t). Circle back to this in master once the memory store is
+		// merged, allowing us to mock the desired initial config to take effect in Setup(t).
 		// assert.Contains(t, response.Header()["Content-Security-Policy"], "frame-ancestors 'self'; script-src 'self' cdn.segment.com/analytics.js/ 'sha256-tPOjw+tkVs9axL78ZwGtYl975dtyPHB6LYKAO2R3gR4='")
 
 		th.App.UpdateConfig(func(cfg *model.Config) {
@@ -303,7 +303,7 @@ func TestHandlerServeInvalidToken(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Description, func(t *testing.T) {
-			th := Setup().InitBasic()
+			th := Setup(t).InitBasic()
 			defer th.TearDown()
 
 			th.App.UpdateConfig(func(cfg *model.Config) {
