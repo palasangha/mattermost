@@ -49,6 +49,7 @@ require (
 	github.com/miekg/dns v1.1.6 // indirect
 	github.com/minio/minio-go v0.0.0-20190422205105-a8704b60278f
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.0.0
 	github.com/olekukonko/tablewriter v0.0.1 // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
@@ -78,11 +79,9 @@ require (
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/crypto v0.0.0-20190426145343-a29dc8fdc734
+	golang.org/x/crypto v0.0.0-20190506204251-e1dfcc566284
 	golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f
-	golang.org/x/net v0.0.0-20190424112056-4829fb13d2c6
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	golang.org/x/sys v0.0.0-20190429190828-d89cdac9e872 // indirect
+	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
 	golang.org/x/text v0.3.2
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
