@@ -730,6 +730,28 @@ func (a *App) AddTeamMembers(teamId string, userIds []string, userRequestorId st
 	return members, nil
 }
 
+func (a *App) BulkAddTeamMembers(teamID string, userIDs []string) *model.AppError {
+	batchSize := 1000
+	var batches [][]string
+
+	for batchSize < len(userIDs) {
+		userIDs, batches = userIDs[batchSize:], append(batches, userIDs[0:batchSize:batchSize])
+	}
+	batches = append(batches, userIDs)
+
+	for _, batch := range batches {
+		if len(batch) == 0 {
+			continue
+		}
+		err := a.Srv.Store.Team().BulkInsertMembers(teamID, batch)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (a *App) AddTeamMemberByToken(userId, tokenId string) (*model.TeamMember, *model.AppError) {
 	team, err := a.AddUserToTeamByToken(userId, tokenId)
 	if err != nil {

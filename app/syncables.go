@@ -15,15 +15,29 @@ func (a *App) CreateDefaultMemberships(since int64) error {
 		return appErr
 	}
 
+	userIDsGroupedByTeamID := make(map[string][]string)
+
 	for _, userTeam := range teamMembers {
-		_, err := a.AddTeamMember(userTeam.TeamID, userTeam.UserID)
+		var userIDs []string
+		var ok bool
+		userIDs, ok = userIDsGroupedByTeamID[userTeam.TeamID]
+		if ok {
+			userIDs = append(userIDs, userTeam.UserID)
+		} else {
+			userIDs = []string{}
+		}
+		userIDsGroupedByTeamID[userTeam.TeamID] = userIDs
+	}
+
+	for teamID, userIDs := range userIDsGroupedByTeamID {
+		err := a.BulkAddTeamMembers(teamID, userIDs)
 		if err != nil {
 			return err
 		}
 
-		a.Log.Info("added teammember",
-			mlog.String("user_id", userTeam.UserID),
-			mlog.String("team_id", userTeam.TeamID),
+		a.Log.Info("added teammembers",
+			mlog.Int("num_members_added", len(userIDs)),
+			mlog.String("team_id", teamID),
 		)
 	}
 

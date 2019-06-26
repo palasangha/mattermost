@@ -52,6 +52,22 @@ func (_m *TeamStore) AnalyticsTeamCount() (int64, *model.AppError) {
 	return r0, r1
 }
 
+// BulkInsertMembers provides a mock function with given fields: teamID, userIDs
+func (_m *TeamStore) BulkInsertMembers(teamID string, userIDs []string) *model.AppError {
+	ret := _m.Called(teamID, userIDs)
+
+	var r0 *model.AppError
+	if rf, ok := ret.Get(0).(func(string, []string) *model.AppError); ok {
+		r0 = rf(teamID, userIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.AppError)
+		}
+	}
+
+	return r0
+}
+
 // ClearAllCustomRoleAssignments provides a mock function with given fields:
 func (_m *TeamStore) ClearAllCustomRoleAssignments() store.StoreChannel {
 	ret := _m.Called()

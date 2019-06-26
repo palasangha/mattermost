@@ -126,6 +126,7 @@ type TeamStore interface {
 	GetUserTeamIds(userId string, allowFromCache bool) StoreChannel
 	InvalidateAllTeamIdsForUser(userId string)
 	ClearCaches()
+	BulkInsertMembers(teamID string, userIDs []string) *model.AppError
 }
 
 type ChannelStore interface {

@@ -551,6 +551,25 @@ func (s SqlTeamStore) SaveMember(member *model.TeamMember, maxUsersPerTeam int) 
 	})
 }
 
+func (s SqlTeamStore) BulkInsertMembers(teamID string, userIDs []string) *model.AppError {
+	query := s.getQueryBuilder().Insert("TeamMembers").Columns("TeamId", "UserId", "Roles", "DeleteAt", "SchemeUser", "SchemeAdmin", "SchemeGuest")
+
+	for _, userID := range userIDs {
+		query = query.Values(teamID, userID, "", 0, true, false, false)
+	}
+
+	queryString, args, err := query.ToSql()
+	if err != nil {
+		return model.NewAppError("SqlTeamStore.BulkInsertMembers", "store.sql_team.get_member.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+
+	if _, err = s.GetMaster().Exec(queryString, args...); err != nil {
+		return model.NewAppError("SqlTeamStore.BulkInsertMembers", "store.sql_team.save.app_error", nil, "team_id="+teamID+", "+err.Error(), http.StatusInternalServerError)
+	}
+
+	return nil
+}
+
 func (s SqlTeamStore) UpdateMember(member *model.TeamMember) (*model.TeamMember, *model.AppError) {
 	member.PreUpdate()
 

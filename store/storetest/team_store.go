@@ -51,6 +51,7 @@ func TestTeamStore(t *testing.T, ss store.Store) {
 	t.Run("GetAllForExportAfter", func(t *testing.T) { testTeamStoreGetAllForExportAfter(t, ss) })
 	t.Run("GetTeamMembersForExport", func(t *testing.T) { testTeamStoreGetTeamMembersForExport(t, ss) })
 	t.Run("GetTeamsForUserWithPagination", func(t *testing.T) { testTeamMembersWithPagination(t, ss) })
+	t.Run("BulkInsertMembers", func(t *testing.T) { testBulkUpsertMembers(t, ss) })
 }
 
 func testTeamStoreSave(t *testing.T, ss store.Store) {
@@ -1659,4 +1660,44 @@ func testTeamStoreGetTeamMembersForExport(t *testing.T, ss store.Store) {
 	assert.Equal(t, t1.Id, tmfe1.TeamId)
 	assert.Equal(t, u1.Id, tmfe1.UserId)
 	assert.Equal(t, t1.Name, tmfe1.TeamName)
+}
+
+func testBulkUpsertMembers(t *testing.T, ss store.Store) {
+	team := &model.Team{}
+	team.DisplayName = "Name"
+	team.Name = model.NewId()
+	team.Email = MakeEmail()
+	team.Type = model.TEAM_OPEN
+	team, err := ss.Team().Save(team)
+	require.Nil(t, err)
+
+	user1 := &model.User{}
+	user1.Email = MakeEmail()
+	user1.Nickname = model.NewId()
+	res := <-ss.User().Save(user1)
+	require.Nil(t, res.Err)
+	user1 = res.Data.(*model.User)
+
+	user2 := &model.User{}
+	user2.Email = MakeEmail()
+	user2.Nickname = model.NewId()
+	res = <-ss.User().Save(user2)
+	require.Nil(t, res.Err)
+	user2 = res.Data.(*model.User)
+
+	teamMembers, err := ss.Team().GetMembers(team.Id, 0, 100, nil)
+	require.Nil(t, err)
+	require.Len(t, teamMembers, 0)
+
+	// base case, adds team members
+	err = ss.Team().BulkInsertMembers(team.Id, []string{user1.Id, user2.Id})
+	require.Nil(t, err)
+	teamMembers, err = ss.Team().GetMembers(team.Id, 0, 100, nil)
+	require.Nil(t, err)
+	require.Len(t, teamMembers, 2)
+
+	// can run again idempotently without error or new records
+	teamMembers, err = ss.Team().GetMembers(team.Id, 0, 100, nil)
+	require.Nil(t, err)
+	require.Len(t, teamMembers, 2)
 }
