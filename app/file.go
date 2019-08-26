@@ -660,6 +660,7 @@ func (t *uploadFileTask) runPlugins() *model.AppError {
 				rejectionReason, http.StatusForbidden, "Reason", rejectionReason)
 			return false
 		}
+		mlog.Error(fmt.Sprintf("RunMultiPluginHook:FileWillBeUploaded replacementInfo=%v, buf.Len()=%v, buf=%v", replacementInfo, buf.Len(), buf.String()))
 		if replacementInfo != nil {
 			t.fileinfo = replacementInfo
 		}

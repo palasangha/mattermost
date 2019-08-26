@@ -1,4 +1,4 @@
-.PHONY: build package run stop run-client run-server stop-client stop-server restart restart-server restart-client start-docker clean-dist clean nuke check-style check-client-style check-server-style check-unit-tests test dist prepare-enteprise run-client-tests setup-run-client-tests cleanup-run-client-tests test-client build-linux build-osx build-windows internal-test-web-client vet run-server-for-web-client-tests
+.PHONY: build package run stop run-client run-server stop-client stop-server restart restart-server restart-client start-docker clean-dist clean nuke check-style check-client-style check-server-style check-unit-tests test dist prepare-enteprise run-client-tests setup-run-client-tests cleanup-run-client-tests build-linux build-osx build-windows internal-test-web-client vet run-server-for-web-client-tests
 
 ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
@@ -266,7 +266,7 @@ ifeq ($(BUILD_ENTERPRISE_READY),true)
 else
 	@echo Running only TE tests
 endif
-	./scripts/test.sh "$(GO)" "$(GOFLAGS)" "$(ALL_PACKAGES)" "$(TESTS)" "$(TESTFLAGS)"
+	./scripts/test.sh "$(GO)" "$(GOFLAGS)" "github.com/mattermost/mattermost-server/app" "$(TESTS)" "$(TESTFLAGS)"
 
 internal-test-web-client: ## Runs web client tests.
 	$(GO) run $(GOFLAGS) $(PLATFORM_FILES) test web_client_tests
@@ -274,12 +274,7 @@ internal-test-web-client: ## Runs web client tests.
 run-server-for-web-client-tests: ## Tests the server for web client.
 	$(GO) run $(GOFLAGS) $(PLATFORM_FILES) test web_client_tests_server
 
-test-client: ## Test client app.
-	@echo Running client tests
-
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) test
-
-test: test-server test-client ## Runs all checks and tests below (except race detection and postgres).
+test: test-server ## Runs all checks and tests below (except race detection and postgres).
 
 cover: ## Runs the golang coverage tool. You must run the unit tests first.
 	@echo Opening coverage info in browser. If this failed run make test first
@@ -311,12 +306,10 @@ validate-go-version: ## Validates the installed version of go against Mattermost
 run-server: validate-go-version start-docker ## Starts the server.
 	@echo Running mattermost for development
 
-	mkdir -p $(BUILD_WEBAPP_DIR)/dist/files
 	$(GO) run $(GOFLAGS) -ldflags '$(LDFLAGS)' $(PLATFORM_FILES) --disableconfigwatch | \
 	    $(GO) run $(GOFLAGS) -ldflags '$(LDFLAGS)' $(PLATFORM_FILES) logs --logrus &
 
 debug-server: start-docker ## Compile and start server using delve.
-	mkdir -p $(BUILD_WEBAPP_DIR)/dist/files
 	$(DELVE) debug $(PLATFORM_FILES) --build-flags="-ldflags '\
 		-X github.com/mattermost/mattermost-server/model.BuildNumber=$(BUILD_NUMBER)\
 		-X \"github.com/mattermost/mattermost-server/model.BuildDate=$(BUILD_DATE)\"\
@@ -325,7 +318,6 @@ debug-server: start-docker ## Compile and start server using delve.
 		-X github.com/mattermost/mattermost-server/model.BuildEnterpriseReady=$(BUILD_ENTERPRISE_READY)'"
 
 debug-server-headless: start-docker ## Debug server from within an IDE like VSCode or IntelliJ.
-	mkdir -p $(BUILD_WEBAPP_DIR)/dist/files
 	$(DELVE) debug --headless --listen=:2345 --api-version=2 --accept-multiclient $(PLATFORM_FILES) --build-flags="-ldflags '\
 		-X github.com/mattermost/mattermost-server/model.BuildNumber=$(BUILD_NUMBER)\
 		-X \"github.com/mattermost/mattermost-server/model.BuildDate=$(BUILD_DATE)\"\
@@ -342,13 +334,8 @@ run-cli: start-docker ## Runs CLI.
 run-client: ## Runs the webapp.
 	@echo Running mattermost client for development
 
-	ln -nfs $(BUILD_WEBAPP_DIR)/dist client
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) run
-
 run-client-fullmap: ## Legacy alias to run-client
 	@echo Running mattermost client for development
-
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) run
 
 run: check-prereqs run-server run-client ## Runs the server and webapp.
 
@@ -373,8 +360,6 @@ endif
 
 stop-client: ## Stops the webapp.
 	@echo Stopping mattermost client
-
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) stop
 
 stop: stop-server stop-client ## Stops server and client.
 
@@ -415,8 +400,6 @@ clean: stop-docker ## Clean up everything except persistant server data.
 
 	rm -Rf $(DIST_ROOT)
 	go clean $(GOFLAGS) -i ./...
-
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) clean
 
 	find . -type d -name data -not -path './vendor/*' | xargs rm -rf
 	rm -rf logs

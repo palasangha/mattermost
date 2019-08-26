@@ -29,14 +29,10 @@ pipeline {
                 cleanWs notFailBuild: true
                 sh """
                     mkdir -p src/github.com/mattermost/mattermost-server
-                    mkdir -p src/github.com/mattermost/mattermost-webapp
                     mkdir -p src/github.com/mattermost/enterprise
                 """
                 dir('src/github.com/mattermost/mattermost-server') {
                     checkout scm
-                }
-                dir('src/github.com/mattermost/mattermost-webapp') {
-                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '310159d3-f7c5-4f5d-bfa1-151e3ef2db57', url: 'https://github.com/mattermost/mattermost-webapp.git']]]
                 }
                 dir('src/github.com/mattermost/enterprise') {
                     checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '310159d3-f7c5-4f5d-bfa1-151e3ef2db57', url: 'https://github.com/mattermost/enterprise.git']]]
@@ -50,22 +46,6 @@ pipeline {
 
                             echo EE Commit: \${EE_GIT_COMMIT}
                         """
-                    }
-                }
-                dir('src/github.com/mattermost/mattermost-webapp') {
-                    withDockerContainer(args: '', image: 'mattermost/mattermost-build-webapp:oct-2-2018') {
-                        ansiColor('xterm') {
-                            sh """
-                                #!/bin/bash -ex
-                                git checkout $env.BRANCH_NAME || git checkout $env.CHANGE_BRANCH || git checkout $env.GIT_BRANCH || git checkout $env.CHANGE_TARGET || git checkout master
-                                rm -rf ./dist
-                                export WEBAPP_GIT_COMMIT=\$(git rev-parse HEAD)
-
-                                echo Webapp Commit: \${WEBAPP_GIT_COMMIT}
-
-                                curl -f -o ./dist.tar.gz https://releases.mattermost.com/mattermost-webapp/commit/\${WEBAPP_GIT_COMMIT}/mattermost-webapp.tar.gz && mkdir ./dist && tar -xvf ./dist.tar.gz -C ./dist --strip-components=1 || make node_modules test build
-                            """
-                        }
                     }
                 }
             }

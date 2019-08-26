@@ -18,8 +18,6 @@ build: build-linux build-windows build-osx
 build-client:
 	@echo Building mattermost web app
 
-	cd $(BUILD_WEBAPP_DIR) && $(MAKE) build
-
 package:
 	@ echo Packaging mattermost
 
@@ -49,10 +47,6 @@ package:
 	sed -i'' -e 's|"ReplyToAddress": "test@example.com",|"ReplyToAddress": "",|g' $(DIST_PATH)/config/config.json
 	sed -i'' -e 's|"SMTPServer": "localhost",|"SMTPServer": "",|g' $(DIST_PATH)/config/config.json
 	sed -i'' -e 's|"SMTPPort": "2500",|"SMTPPort": "",|g' $(DIST_PATH)/config/config.json
-
-	@# Package webapp
-	mkdir -p $(DIST_PATH)/client
-	cp -RL $(BUILD_WEBAPP_DIR)/dist/* $(DIST_PATH)/client
 
 	@# Help files
 ifeq ($(BUILD_ENTERPRISE_READY),true)
