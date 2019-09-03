@@ -1,12 +1,8 @@
 version: 2.1
 
 executors:
-  default:
-    working_directory: /go/src/github.com/mattermost/
-    docker:
-      - image: mattermost/mattermost-build-webapp:oct-2-2018
   ubuntu:
-    working_directory: ~/go/src/github.com/mattermost/mattermost-server
+    working_directory: ~/go/src/github.com/mattermost/
     machine:
       image: "ubuntu-1604:201903-01"
     environment:
@@ -14,11 +10,13 @@ executors:
 
 jobs:
   setup:
-    executor:
-      name: default
+    working_directory: /go/src/github.com/mattermost/mattermost-server
+    docker:
+      - image: mattermost/mattermost-build-webapp:oct-2-2018
     steps:
+      - checkout
       - run: |
-          ls -la
+          cd ../
           mkdir -p ~/.ssh/
           echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
           git clone git@github.com:mattermost/mattermost-webapp.git
@@ -31,44 +29,48 @@ jobs:
           root: /go/src/github.com/mattermost
           paths:
             - mattermost-webapp
+            - mattermost-server
 
   check-i18n:
-    executor:
-      name: ubuntu
+    docker:
+    - image: circleci/golang:1.12
+    working_directory: /go/src/github.com/mattermost/
     steps:
-      - checkout
       - attach_workspace:
-          at: ~/go/src/github.com/mattermost/
+          at: /go/src/github.com/mattermost/
       - run:
-          name: Check i18n
           command: |
-            docker run -it \
-              -v ~/go/src:/go/src \
-              -w /go/src/github.com/mattermost/mattermost-server \
-              mattermost/mattermost-build-server:feb-28-2019 \
-              bash -c 'cd /go/src/github.com/mattermost/mattermost-server; cp i18n/en.json /tmp/en.json; make i18n-extract; diff /tmp/en.json i18n/en.json;'
+            cd mattermost-server
+            cp i18n/en.json /tmp/en.json
+            make i18n-extract
+            diff /tmp/en.json i18n/en.json
+
+  build:
+    docker:
+      - image: mattermost/mattermost-build-server:feb-28-2019
+    working_directory: /go/src/github.com/mattermost
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/mattermost/
+      - run:
+          command: |
+            cd mattermost-server
+            make config-reset
+            make check-style BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}'
+            GOFLAGS=-p=8 make build BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}'
+            GOFLAGS=-p=8 make package BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}'
+      - store_artifacts:
+          path: /go/src/github.com/mattermost/mattermost-server/dist/mattermost-team-linux-amd64.tar.gz
+      - store_artifacts:
+          path: /go/src/github.com/mattermost/mattermost-server/dist/mattermost-team-osx-amd64.tar.gz
+      - store_artifacts:
+          path: /go/src/github.com/mattermost/mattermost-server/dist/mattermost-team-windows-amd64.zip
       - persist_to_workspace:
           root: /go/src/github.com/mattermost
           paths:
             - mattermost-server
-  build:
-    executor:
-      name: ubuntu
-    steps:
-      - attach_workspace:
-          at: ~/go/src/github.com/mattermost/
-      - run:
-          name: Build
-          command: |
-            docker run -it \
-              -v ~/go/src:/go/src \
-              -w /go/src/github.com/mattermost/mattermost-server \
-              mattermost/mattermost-build-server:feb-28-2019 \
-              bash -c 'cd /go/src/github.com/mattermost/mattermost-server;
-                            make config-reset;
-                            make check-style BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}';
-                            make build BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}';
-                            make package BUILD_NUMBER='${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM}''
+            - mattermost-webapp
+
 
   test:
     executor:
@@ -94,7 +96,8 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            mkdir -p client/plugins
+            ulimit -n 8096
+            mkdir -p mattermost-server/client/plugins
             docker run -it --net circleci_mm-test \
               --env TEST_DATABASE_MYSQL_DSN="mmuser:mostest@tcp(mysql:3306)/mattermost_test?charset=utf8mb4,utf8\u0026readTimeout=30s\u0026writeTimeout=30s" \
               --env TEST_DATABASE_POSTGRESQL_DSN="postgres://mmuser:mostest@postgres:5432/mattermost_test?sslmode=disable&connect_timeout=10" \
@@ -113,7 +116,7 @@ jobs:
               -v ~/go/src:/go/src \
               -w /go/src/github.com/mattermost/mattermost-server \
               mattermost/mattermost-build-server:feb-28-2019 \
-              bash -c 'make test-server BUILD_NUMBER="$CIRCLE_BRANCH-$CIRCLE_PREVIOUS_BUILD_NUM" TESTFLAGS= TESTFLAGSEE='
+              bash -c 'ulimit -n 8096; make test-server BUILD_NUMBER="$CIRCLE_BRANCH-$CIRCLE_PREVIOUS_BUILD_NUM" TESTFLAGS= TESTFLAGSEE='
           no_output_timeout: 1h
       - run:
           name: Capture docker logs
@@ -127,7 +130,7 @@ jobs:
             docker stats -a --no-stream > logs/docker_stats
             tar -czvf logs/docker_logs.tar.gz logs/docker-compose_logs logs/docker_ps logs/docker_stats
       - store_artifacts:
-          path: /go/src/github.com/mattermost/mattermost-server/build/logs
+          path: ~/go/src/github.com/mattermost/mattermost-server/build/logs
       - run:
           when: always
           command: |
@@ -135,9 +138,10 @@ jobs:
             mkdir -p test-results
             cp report.xml test-results
       - store_test_results:
-          path: /go/src/github.com/mattermost/mattermost-server/test-results/
+          path: ~/go/src/github.com/mattermost/mattermost-server/test-results/
       - store_artifacts:
-          path: /go/src/github.com/mattermost/mattermost-server/test-results/
+          path: ~/go/src/github.com/mattermost/mattermost-server/test-results/
+
 
 workflows:
   version: 2
@@ -149,7 +153,7 @@ workflows:
             - setup
       - test:
           requires:
-            - check-i18n
+            - setup
       - build:
           requires:
             - test
