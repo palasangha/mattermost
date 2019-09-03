@@ -221,4 +221,4 @@ workflows:
       - build-docker:
           context: matterbuild-docker
           requires:
-            - build
+            - upload-s3-sha
