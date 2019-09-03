@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  aws-s3: circleci/aws-s3@1.0.11
+
 executors:
   ubuntu:
     working_directory: ~/go/src/github.com/mattermost/
@@ -208,11 +211,14 @@ workflows:
           requires:
             - test
       - upload-s3-sha:
+          context: mattermost-ci-s3
           requires:
             - build
       - upload-s3:
+          context: mattermost-ci-s3
           requires:
             - build
       - build-docker:
+          context: matterbuild-docker
           requires:
             - build
