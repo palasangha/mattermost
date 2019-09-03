@@ -45,8 +45,9 @@ else
 endif
 
 # Golang Flags
+export GO111MODULE=on
 GOPATH ?= $(shell go env GOPATH)
-GOFLAGS ?= $(GOFLAGS:)
+GOFLAGS ?= $(GOFLAGS:) -mod=vendor
 GO=go
 DELVE=dlv
 LDFLAGS += -X "github.com/mattermost/mattermost-server/model.BuildNumber=$(BUILD_NUMBER)"
@@ -179,7 +180,7 @@ store-mocks: ## Creates mock files.
 	$(GOPATH)/bin/mockery -dir store -all -output store/storetest/mocks -note 'Regenerate this file using `make store-mocks`.'
 
 store-layers: ## Generate layers for the store
-	go generate ./store
+	$(GO) generate $(GOFLAGS) ./store
 
 filesstore-mocks: ## Creates mock files.
 	env GO111MODULE=off go get -u github.com/vektra/mockery/...
@@ -200,7 +201,7 @@ einterfaces-mocks: ## Creates mock files for einterfaces.
 	$(GOPATH)/bin/mockery -dir einterfaces -all -output einterfaces/mocks -note 'Regenerate this file using `make einterfaces-mocks`.'
 
 pluginapi: ## Generates api and hooks glue code for plugins
-	go generate ./plugin
+	$(GO) generate $(GOFLAGS) ./plugin
 
 check-licenses: ## Checks license status.
 	./scripts/license-check.sh $(TE_PACKAGES) $(EE_PACKAGES)
@@ -408,7 +409,7 @@ config-ldap: ## Configures LDAP.
 config-reset: ## Resets the config/config.json file to the default.
 	@echo Resetting configuration to default
 	rm -f config/config.json
-	OUTPUT_CONFIG=$(PWD)/config/config.json go generate ./config
+	OUTPUT_CONFIG=$(PWD)/config/config.json $(GO) generate $(GOFLAGS) ./config
 
 diff-config: ## Compares default configuration between two mattermost versions
 	@./scripts/diff-config.sh
