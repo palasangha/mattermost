@@ -151,7 +151,7 @@ gofmt: ## Runs gofmt against all packages.
 
 	@for package in $(TE_PACKAGES) $(EE_PACKAGES); do \
 		echo "Checking "$$package; \
-		files=$$(go list -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}' $$package); \
+		files=$$($(GO) list $(GOFLAGS) -f '{{range .GoFiles}}{{$$.Dir}}/{{.}} {{end}}' $$package); \
 		if [ "$$files" ]; then \
 			gofmt_output=$$(gofmt -d -s $$files 2>&1); \
 			if [ "$$gofmt_output" ]; then \
