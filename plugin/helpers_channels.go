@@ -55,7 +55,7 @@ func (p *HelpersImpl) EnsureChannel(channel *model.Channel) (retChannelId string
 		}
 	} else {
 		existingChannel, channelGetErr = p.API.GetChannelByName(channel.TeamId, channel.Name, false)
-		if channelGetErr != nil {
+		if channelGetErr != nil && channelGetErr.Id != "store.sql_channel.get_by_name.missing.app_error" {
 			return "", errors.Wrap(channelGetErr, "failed to get channel by name")
 		}
 	}
